@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_title">Welcome to Cinema</string>
+    <string name="welcome_subtitle">Discover trending movies and popular people in the entertainment industry.</string>
+    <string name="feature_hint">Use the bottom navigation to explore Movies and People</string>
+    <string name="welcome_icon_description">Welcome icon</string>
+</resources>

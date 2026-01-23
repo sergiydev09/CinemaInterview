@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.cinema.home.ui.feature.HomeFragment"
+        android:label="@string/nav_home">
+        <deepLink
+            android:id="@+id/deeplink_home"
+            app:uri="cinema://home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/moviesFragment"
+        android:name="com.cinema.movies.ui.feature.list.MoviesFragment"
+        android:label="@string/nav_movies">
+        <deepLink
+            android:id="@+id/deeplink_movies"
+            app:uri="cinema://movies" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/movieDetailFragment"
+        android:name="com.cinema.movies.ui.feature.detail.MovieDetailFragment"
+        android:label="@string/nav_movie_detail">
+        <argument
+            android:name="movieId"
+            app:argType="integer" />
+        <deepLink
+            android:id="@+id/deeplink_movie_detail"
+            app:uri="cinema://movie/{movieId}" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/peopleFragment"
+        android:name="com.cinema.people.ui.feature.list.PeopleFragment"
+        android:label="@string/nav_people">
+        <deepLink
+            android:id="@+id/deeplink_people"
+            app:uri="cinema://people" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/personDetailFragment"
+        android:name="com.cinema.people.ui.feature.detail.PersonDetailFragment"
+        android:label="@string/nav_person_detail">
+        <argument
+            android:name="personId"
+            app:argType="integer" />
+        <deepLink
+            android:id="@+id/deeplink_person_detail"
+            app:uri="cinema://person/{personId}" />
+    </fragment>
+
+</navigation>

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        app:elevation="0dp"
+        app:liftOnScroll="false">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_back"
+            app:navigationIconTint="@color/text_primary"
+            app:navigationContentDescription="@string/back"
+            app:title="@string/movie_detail"
+            app:titleTextColor="@color/text_primary" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/content_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/movie_backdrop"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:contentDescription="@string/movie_backdrop_description"
+                android:scaleType="centerCrop"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@color/divider" />
+
+            <TextView
+                android:id="@+id/movie_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/movie_backdrop"
+                tools:text="Movie Title" />
+
+            <TextView
+                android:id="@+id/movie_tagline"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:fontFamily="serif"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:textStyle="italic"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/movie_title"
+                tools:text="This is the tagline"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/info_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/movie_tagline">
+
+                <TextView
+                    android:id="@+id/movie_rating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="4dp"
+                    android:textColor="@color/secondary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_star"
+                    app:drawableTint="@color/secondary"
+                    tools:text="8.5" />
+
+                <TextView
+                    android:id="@+id/movie_vote_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    tools:text="(1,234 votes)" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="16dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:background="@color/divider" />
+
+                <TextView
+                    android:id="@+id/movie_release_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    tools:text="2024" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="16dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:background="@color/divider" />
+
+                <TextView
+                    android:id="@+id/movie_runtime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="120 min"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/overview_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="24dp"
+                android:text="@string/overview"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/info_row" />
+
+            <TextView
+                android:id="@+id/movie_overview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:lineSpacingMultiplier="1.3"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/overview_label"
+                tools:text="Movie overview goes here..." />
+
+            <TextView
+                android:id="@+id/genres_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="24dp"
+                android:text="@string/genres"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/movie_overview"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/movie_genres"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/genres_label"
+                tools:text="Action, Adventure, Sci-Fi"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/budget_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/budget"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/movie_genres"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/movie_budget"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintBaseline_toBaselineOf="@id/budget_label"
+                app:layout_constraintStart_toEndOf="@id/budget_label"
+                tools:text="$100,000,000"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/revenue_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/revenue"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/budget_label"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/movie_revenue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintBaseline_toBaselineOf="@id/revenue_label"
+                app:layout_constraintStart_toEndOf="@id/revenue_label"
+                tools:text="$500,000,000"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/production_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="24dp"
+                android:text="@string/production_companies"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/revenue_label"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/movie_production_companies"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/production_label"
+                tools:text="Warner Bros., Universal"
+                tools:visibility="visible" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.cinema.core.ui.component.LoadingView
+        android:id="@+id/loading_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <com.cinema.core.ui.component.ErrorView
+        android:id="@+id/error_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

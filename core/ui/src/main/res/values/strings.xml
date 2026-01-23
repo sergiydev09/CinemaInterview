@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common strings -->
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_icon_description">Error icon</string>
+</resources>

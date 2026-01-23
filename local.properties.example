@@ -1,0 +1,10 @@
+# Copy this file to local.properties and fill in your values
+# local.properties is ignored by git
+
+# Android SDK location (auto-configured by Android Studio)
+sdk.dir=/path/to/your/Android/sdk
+
+# TMDB API Token (required)
+# Get your token at: https://www.themoviedb.org/settings/api
+# Use the "API Read Access Token" (not the API Key)
+TMDB_API_TOKEN=your_tmdb_api_token_here

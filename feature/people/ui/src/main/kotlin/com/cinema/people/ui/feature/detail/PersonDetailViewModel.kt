@@ -1,0 +1,63 @@
+package com.cinema.people.ui.feature.detail
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.cinema.core.domain.util.Result
+import com.cinema.people.domain.model.PersonDetail
+import com.cinema.people.domain.usecase.GetPersonDetailUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class PersonDetailUiState(
+    val isLoading: Boolean = false,
+    val person: PersonDetail? = null,
+    val error: String? = null
+)
+
+@HiltViewModel
+class PersonDetailViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val getPersonDetailUseCase: GetPersonDetailUseCase
+) : ViewModel() {
+
+    private val personId: Int = savedStateHandle.get<Int>(ARG_PERSON_ID) ?: 0
+
+    private val _uiState = MutableStateFlow(PersonDetailUiState())
+    val uiState: StateFlow<PersonDetailUiState> = _uiState.asStateFlow()
+
+    init {
+        loadPersonDetail()
+    }
+
+    fun loadPersonDetail() {
+        viewModelScope.launch {
+            getPersonDetailUseCase(personId).collect { result ->
+                when (result) {
+                    is Result.Loading -> {
+                        _uiState.update { it.copy(isLoading = true, error = null) }
+                    }
+                    is Result.Success -> {
+                        _uiState.update { it.copy(isLoading = false, person = result.data) }
+                    }
+                    is Result.Error -> {
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    }
+                }
+            }
+        }
+    }
+
+    fun retry() {
+        loadPersonDetail()
+    }
+
+    companion object {
+        const val ARG_PERSON_ID = "personId"
+    }
+}

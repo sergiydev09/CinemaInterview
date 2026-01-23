@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Login Screen -->
+    <string name="login_title">Cinema Interview</string>
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="login_button">Sign In</string>
+    <string name="remember_username">Remember username</string>
+    <string name="app_logo_description">Application logo</string>
+
+    <!-- Validation Errors -->
+    <string name="error_username_too_short">Username must be at least 4 characters</string>
+    <string name="error_password_too_short">Password must be at least 8 characters</string>
+    <string name="error_password_no_uppercase">Password must contain an uppercase letter</string>
+    <string name="error_password_no_lowercase">Password must contain a lowercase letter</string>
+    <string name="error_password_no_digit">Password must contain a digit</string>
+    <string name="error_password_no_special_char">Password must contain a special character</string>
+
+    <!-- Login Errors -->
+    <string name="error_invalid_credentials">Invalid username or password</string>
+</resources>

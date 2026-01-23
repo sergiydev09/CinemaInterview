@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="trending_movies">Trending Movies</string>
+    <string name="today">Today</string>
+    <string name="this_week">This Week</string>
+    <string name="movie_poster_description">Movie poster</string>
+    <string name="movie_detail">Movie Details</string>
+    <string name="movie_backdrop_description">Movie backdrop</string>
+    <string name="back">Back</string>
+    <string name="overview">Overview</string>
+    <string name="no_overview">No overview available</string>
+    <string name="genres">Genres</string>
+    <string name="budget">Budget:</string>
+    <string name="revenue">Revenue:</string>
+    <string name="production_companies">Production Companies</string>
+    <string name="vote_count_format">(%,d votes)</string>
+    <string name="runtime_format">%d min</string>
+</resources>

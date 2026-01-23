@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="trending_people">Trending People</string>
+    <string name="today">Today</string>
+    <string name="this_week">This Week</string>
+    <string name="person_photo_description">Person photo</string>
+    <string name="person_detail">Person Details</string>
+    <string name="popularity">Popularity:</string>
+    <string name="known_for">Known For</string>
+    <string name="no_known_works">No known works</string>
+    <string name="back">Back</string>
+    <string name="biography">Biography</string>
+    <string name="no_biography">No biography available</string>
+    <string name="birthday">Birthday:</string>
+    <string name="deathday">Died:</string>
+    <string name="place_of_birth">Place of birth:</string>
+    <string name="also_known_as">Also Known As</string>
+</resources>
