@@ -49,6 +49,7 @@ CinemaInterview/
 | Networking   | Retrofit + OkHttp + Moshi          |
 | UI           | Material Design 3, ViewBinding, XML|
 | Architecture | MVVM, StateFlow, Coroutines Flow   |
+| Storage      | DataStore + Tink (encryption)      |
 | Image Loading| Coil                               |
 | Navigation   | Jetpack Navigation                 |
 | Testing      | JUnit, MockK, Turbine              |
@@ -153,6 +154,31 @@ Using **Hilt** for dependency injection:
 **TimeWindow** (`core/domain`): Enum for trending time windows:
 - `TimeWindow.DAY` - Daily trending
 - `TimeWindow.WEEK` - Weekly trending
+
+### Session Management
+
+**SessionManager** (`core/domain`): Interface for managing authentication state:
+- `startSession(token)` - Starts session and configures API authentication
+- `logout()` - Ends session and clears credentials
+- `isSessionActive()` - Checks if user is authenticated
+- `setSessionCallback()` - Notifies when session expires (inactivity timeout)
+- `resetInactivityTimer()` - Resets timeout on user interaction
+
+The implementation (`SessionManagerImpl`) coordinates with `AuthInterceptor` to inject the Bearer token into all API requests automatically.
+
+### Secure Storage
+
+**SecureLocalDataSource** (`core/data`): Encrypted storage using Google Tink + DataStore:
+- Uses **AES-GCM** encryption for sensitive data
+- Stores encrypted values in **DataStore Preferences**
+- Supports any serializable type via **Moshi**
+- Auto-removes corrupted data on decryption failure
+
+```kotlin
+// Usage example
+secureDataSource.save("username", "john_doe")
+val username: String? = secureDataSource.get("username")
+```
 
 ## Building & Running
 
