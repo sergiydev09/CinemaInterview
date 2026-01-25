@@ -2,17 +2,27 @@ package com.cinema.core.favorites.domain.usecase
 
 import com.cinema.core.favorites.domain.model.FavoriteMovie
 import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Test
 
 class ToggleMovieFavoriteUseCaseTest {
 
-    private val repository: FavoritesRepository = mockk(relaxed = true)
-    private val useCase = ToggleMovieFavoriteUseCase(repository)
+    private lateinit var repository: FavoritesRepository
+    private lateinit var useCase: ToggleMovieFavoriteUseCase
+
+    @Before
+    fun setup() {
+        repository = mockk()
+        coJustRun { repository.addFavoriteMovie(any()) }
+        coJustRun { repository.removeFavoriteMovie(any()) }
+        useCase = ToggleMovieFavoriteUseCase(repository)
+    }
 
     private val movie = FavoriteMovie(
         id = 1,
@@ -23,7 +33,7 @@ class ToggleMovieFavoriteUseCaseTest {
 
     @Test
     fun `invoke adds movie when not favorite`() = runTest {
-        coEvery { repository.isMovieFavorite(movie.id) } returns flowOf(false)
+        every { repository.isMovieFavorite(movie.id) } returns flowOf(false)
 
         useCase(movie)
 
@@ -33,7 +43,7 @@ class ToggleMovieFavoriteUseCaseTest {
 
     @Test
     fun `invoke removes movie when already favorite`() = runTest {
-        coEvery { repository.isMovieFavorite(movie.id) } returns flowOf(true)
+        every { repository.isMovieFavorite(movie.id) } returns flowOf(true)
 
         useCase(movie)
 

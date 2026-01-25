@@ -28,45 +28,53 @@ class FavoritesRepositoryImpl @Inject constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val _favoriteMovies = MutableStateFlow<List<FavoriteMovieEntity>>(emptyList())
-    private val _favoritePeople = MutableStateFlow<List<FavoritePersonEntity>>(emptyList())
+    private val _favoriteMovies = MutableStateFlow<Map<Int, FavoriteMovieEntity>>(emptyMap())
+    private val _favoritePeople = MutableStateFlow<Map<Int, FavoritePersonEntity>>(emptyMap())
 
     init {
         scope.launch {
-            _favoriteMovies.value = secureLocalDataSource.get<List<FavoriteMovieEntity>>(KEY_FAVORITE_MOVIES) ?: emptyList()
-            _favoritePeople.value = secureLocalDataSource.get<List<FavoritePersonEntity>>(KEY_FAVORITE_PEOPLE) ?: emptyList()
+            _favoriteMovies.value = secureLocalDataSource.get<Map<Int, FavoriteMovieEntity>>(KEY_FAVORITE_MOVIES) ?: emptyMap()
+            _favoritePeople.value = secureLocalDataSource.get<Map<Int, FavoritePersonEntity>>(KEY_FAVORITE_PEOPLE) ?: emptyMap()
         }
     }
 
-    override val favoriteMovies: Flow<List<FavoriteMovie>> =
-        _favoriteMovies.map { entities -> entities.map { it.toDomain() } }
+    override val favoriteMovies: Flow<Map<Int, FavoriteMovie>> =
+        _favoriteMovies.map { map -> map.mapValues { it.value.toDomain() } }
 
-    override val favoritePeople: Flow<List<FavoritePerson>> =
-        _favoritePeople.map { entities -> entities.map { it.toDomain() } }
+    override val favoritePeople: Flow<Map<Int, FavoritePerson>> =
+        _favoritePeople.map { map -> map.mapValues { it.value.toDomain() } }
 
     override fun isMovieFavorite(movieId: Int): Flow<Boolean> =
-        _favoriteMovies.map { movies -> movies.any { it.id == movieId } }
+        _favoriteMovies.map { it.containsKey(movieId) }
 
     override fun isPersonFavorite(personId: Int): Flow<Boolean> =
-        _favoritePeople.map { people -> people.any { it.id == personId } }
+        _favoritePeople.map { it.containsKey(personId) }
 
     override suspend fun addFavoriteMovie(movie: FavoriteMovie) {
-        _favoriteMovies.update { currentList -> currentList + movie.toEntity() }
-        secureLocalDataSource.save(KEY_FAVORITE_MOVIES, _favoriteMovies.value)
+        _favoriteMovies.update { map -> map + (movie.id to movie.toEntity()) }
+        persistMovies()
     }
 
     override suspend fun removeFavoriteMovie(movieId: Int) {
-        _favoriteMovies.update { currentList -> currentList.filter { it.id != movieId } }
-        secureLocalDataSource.save(KEY_FAVORITE_MOVIES, _favoriteMovies.value)
+        _favoriteMovies.update { map -> map - movieId }
+        persistMovies()
     }
 
     override suspend fun addFavoritePerson(person: FavoritePerson) {
-        _favoritePeople.update { currentList -> currentList + person.toEntity() }
-        secureLocalDataSource.save(KEY_FAVORITE_PEOPLE, _favoritePeople.value)
+        _favoritePeople.update { map -> map + (person.id to person.toEntity()) }
+        persistPeople()
     }
 
     override suspend fun removeFavoritePerson(personId: Int) {
-        _favoritePeople.update { currentList -> currentList.filter { it.id != personId } }
+        _favoritePeople.update { map -> map - personId }
+        persistPeople()
+    }
+
+    private suspend fun persistMovies() {
+        secureLocalDataSource.save(KEY_FAVORITE_MOVIES, _favoriteMovies.value)
+    }
+
+    private suspend fun persistPeople() {
         secureLocalDataSource.save(KEY_FAVORITE_PEOPLE, _favoritePeople.value)
     }
 

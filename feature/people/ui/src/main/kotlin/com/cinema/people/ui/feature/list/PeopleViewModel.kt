@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
+import com.cinema.core.favorites.domain.model.FavoritePerson
+import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.Person
 import com.cinema.people.domain.usecase.GetTrendingPeopleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +32,8 @@ data class PeopleUiState(
  */
 @HiltViewModel
 class PeopleViewModel @Inject constructor(
-    private val getTrendingPeopleUseCase: GetTrendingPeopleUseCase
+    private val getTrendingPeopleUseCase: GetTrendingPeopleUseCase,
+    private val togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PeopleUiState())
@@ -39,6 +42,18 @@ class PeopleViewModel @Inject constructor(
     init {
         loadPeople()
     }
+
+    fun toggleFavorite(person: Person) {
+        viewModelScope.launch {
+            togglePersonFavoriteUseCase(person.toFavoritePerson())
+        }
+    }
+
+    private fun Person.toFavoritePerson(): FavoritePerson = FavoritePerson(
+        id = id,
+        name = name,
+        profileUrl = profileUrl
+    )
 
     /**
      * Loads trending people based on the current time window.

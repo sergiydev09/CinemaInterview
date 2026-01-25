@@ -34,6 +34,7 @@ import com.cinema.movies.ui.feature.list.MoviesUiState
 fun MoviesContent(
     uiState: MoviesUiState,
     onMovieClick: (Int) -> Unit,
+    onFavoriteClick: (Movie) -> Unit,
     onTimeWindowChanged: (TimeWindow) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -89,7 +90,9 @@ fun MoviesContent(
                         ) { movie ->
                             MovieItem(
                                 movie = movie,
+                                isFavorite = movie.isFavorite,
                                 onClick = { onMovieClick(movie.id) },
+                                onFavoriteClick = { onFavoriteClick(movie) },
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -107,6 +110,7 @@ private fun MoviesContentLoadingPreview() {
         MoviesContent(
             uiState = MoviesUiState(isLoading = true),
             onMovieClick = {},
+            onFavoriteClick = {},
             onTimeWindowChanged = {},
             onRetry = {}
         )
@@ -129,7 +133,8 @@ private fun MoviesContentSuccessPreview() {
                         releaseDate = "2008-07-18",
                         voteAverage = 8.5,
                         voteCount = 25000,
-                        popularity = 85.0
+                        popularity = 85.0,
+                        isFavorite = true
                     ),
                     Movie(
                         id = 2,
@@ -145,6 +150,7 @@ private fun MoviesContentSuccessPreview() {
                 )
             ),
             onMovieClick = {},
+            onFavoriteClick = {},
             onTimeWindowChanged = {},
             onRetry = {}
         )
@@ -158,6 +164,7 @@ private fun MoviesContentErrorPreview() {
         MoviesContent(
             uiState = MoviesUiState(error = "Network error"),
             onMovieClick = {},
+            onFavoriteClick = {},
             onTimeWindowChanged = {},
             onRetry = {}
         )

@@ -3,8 +3,10 @@ package com.cinema.people.ui.feature.list
 import app.cash.turbine.test
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
+import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.Person
 import com.cinema.people.domain.usecase.GetTrendingPeopleUseCase
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -27,12 +29,14 @@ import org.junit.Test
 class PeopleViewModelTest {
 
     private lateinit var getTrendingPeopleUseCase: GetTrendingPeopleUseCase
+    private lateinit var togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getTrendingPeopleUseCase = mockk()
+        togglePersonFavoriteUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -154,7 +158,21 @@ class PeopleViewModelTest {
         verify(exactly = 2) { getTrendingPeopleUseCase(TimeWindow.DAY) }
     }
 
-    private fun createViewModel() = PeopleViewModel(getTrendingPeopleUseCase)
+    @Test
+    fun `toggleFavorite calls use case`() = runTest {
+        every { getTrendingPeopleUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
+
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val person = createPerson(1)
+        viewModel.toggleFavorite(person)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { togglePersonFavoriteUseCase(any()) }
+    }
+
+    private fun createViewModel() = PeopleViewModel(getTrendingPeopleUseCase, togglePersonFavoriteUseCase)
 
     private fun createPerson(id: Int) = Person(
         id = id,

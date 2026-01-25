@@ -5,8 +5,8 @@ import com.cinema.core.favorites.domain.model.FavoritePerson
 import kotlinx.coroutines.flow.Flow
 
 interface FavoritesRepository {
-    val favoriteMovies: Flow<List<FavoriteMovie>>
-    val favoritePeople: Flow<List<FavoritePerson>>
+    val favoriteMovies: Flow<Map<Int, FavoriteMovie>>
+    val favoritePeople: Flow<Map<Int, FavoritePerson>>
 
     fun isMovieFavorite(movieId: Int): Flow<Boolean>
     fun isPersonFavorite(personId: Int): Flow<Boolean>

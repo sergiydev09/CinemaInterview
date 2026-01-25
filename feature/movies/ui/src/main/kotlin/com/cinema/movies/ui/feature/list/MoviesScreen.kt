@@ -16,6 +16,7 @@ fun MoviesScreen(
     MoviesContent(
         uiState = uiState,
         onMovieClick = onMovieClick,
+        onFavoriteClick = viewModel::toggleFavorite,
         onTimeWindowChanged = viewModel::onTimeWindowChanged,
         onRetry = viewModel::retry
     )

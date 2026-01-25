@@ -25,15 +25,15 @@ class FavoritesRepositoryImplTest {
     @Before
     fun setup() {
         secureLocalDataSource = mockk(relaxed = true)
-        coEvery { secureLocalDataSource.get<List<FavoriteMovieEntity>>(any(), any<KType>()) } returns null
-        coEvery { secureLocalDataSource.get<List<FavoritePersonEntity>>(any(), any<KType>()) } returns null
+        coEvery { secureLocalDataSource.get<Map<Int, FavoriteMovieEntity>>(any(), any<KType>()) } returns null
+        coEvery { secureLocalDataSource.get<Map<Int, FavoritePersonEntity>>(any(), any<KType>()) } returns null
         repository = FavoritesRepositoryImpl(secureLocalDataSource)
     }
 
     @Test
-    fun `favoriteMovies initially returns empty list`() = runTest {
+    fun `favoriteMovies initially returns empty map`() = runTest {
         repository.favoriteMovies.test {
-            assertEquals(emptyList<FavoriteMovie>(), awaitItem())
+            assertEquals(emptyMap<Int, FavoriteMovie>(), awaitItem())
         }
     }
 
@@ -47,16 +47,16 @@ class FavoritesRepositoryImplTest {
         )
 
         repository.favoriteMovies.test {
-            assertEquals(emptyList<FavoriteMovie>(), awaitItem())
+            assertEquals(emptyMap<Int, FavoriteMovie>(), awaitItem())
 
             repository.addFavoriteMovie(movie)
 
             val favorites = awaitItem()
             assertEquals(1, favorites.size)
-            assertEquals(movie, favorites.first())
+            assertEquals(movie, favorites[1])
         }
 
-        coVerify { secureLocalDataSource.save(eq("favorite_movies"), any<List<FavoriteMovieEntity>>(), any<KType>()) }
+        coVerify { secureLocalDataSource.save(eq("favorite_movies"), any<Map<Int, FavoriteMovieEntity>>(), any<KType>()) }
     }
 
     @Test
@@ -69,7 +69,7 @@ class FavoritesRepositoryImplTest {
         )
 
         repository.favoriteMovies.test {
-            skipItems(1) // Skip initial empty list
+            skipItems(1) // Skip initial empty map
 
             repository.addFavoriteMovie(movie)
             awaitItem() // Skip added state
@@ -80,7 +80,7 @@ class FavoritesRepositoryImplTest {
             assertTrue(favorites.isEmpty())
         }
 
-        coVerify(exactly = 2) { secureLocalDataSource.save(eq("favorite_movies"), any<List<FavoriteMovieEntity>>(), any<KType>()) }
+        coVerify(exactly = 2) { secureLocalDataSource.save(eq("favorite_movies"), any<Map<Int, FavoriteMovieEntity>>(), any<KType>()) }
     }
 
     @Test
@@ -102,9 +102,9 @@ class FavoritesRepositoryImplTest {
     }
 
     @Test
-    fun `favoritePeople initially returns empty list`() = runTest {
+    fun `favoritePeople initially returns empty map`() = runTest {
         repository.favoritePeople.test {
-            assertEquals(emptyList<FavoritePerson>(), awaitItem())
+            assertEquals(emptyMap<Int, FavoritePerson>(), awaitItem())
         }
     }
 
@@ -117,7 +117,7 @@ class FavoritesRepositoryImplTest {
         )
 
         repository.favoritePeople.test {
-            assertEquals(emptyList<FavoritePerson>(), awaitItem())
+            assertEquals(emptyMap<Int, FavoritePerson>(), awaitItem())
 
             repository.addFavoritePerson(person)
             assertEquals(1, awaitItem().size)
@@ -126,15 +126,13 @@ class FavoritesRepositoryImplTest {
             assertTrue(awaitItem().isEmpty())
         }
 
-        coVerify(exactly = 2) { secureLocalDataSource.save(eq("favorite_people"), any<List<FavoritePersonEntity>>(), any<KType>()) }
+        coVerify(exactly = 2) { secureLocalDataSource.save(eq("favorite_people"), any<Map<Int, FavoritePersonEntity>>(), any<KType>()) }
     }
 
     @Test
     fun `init loads favorites from secure storage`() = runTest {
-        // Just verify that init calls SecureLocalDataSource.get
-        // We can't easily test the async result in unit tests with Dispatchers.IO
-        coVerify(timeout = 1000) { secureLocalDataSource.get<List<FavoriteMovieEntity>>(eq("favorite_movies"), any<KType>()) }
-        coVerify(timeout = 1000) { secureLocalDataSource.get<List<FavoritePersonEntity>>(eq("favorite_people"), any<KType>()) }
+        coVerify(timeout = 1000) { secureLocalDataSource.get<Map<Int, FavoriteMovieEntity>>(eq("favorite_movies"), any<KType>()) }
+        coVerify(timeout = 1000) { secureLocalDataSource.get<Map<Int, FavoritePersonEntity>>(eq("favorite_people"), any<KType>()) }
     }
 
     @Test
@@ -195,8 +193,8 @@ class FavoritesRepositoryImplTest {
 
     @Test
     fun `init loads existing movies from secure storage`() = runTest {
-        val storedEntities = listOf(
-            FavoriteMovieEntity(
+        val storedEntities = mapOf(
+            1 to FavoriteMovieEntity(
                 id = 1,
                 title = "Stored Movie",
                 posterUrl = "https://example.com/poster.jpg",
@@ -204,48 +202,46 @@ class FavoritesRepositoryImplTest {
             )
         )
 
-        coEvery { secureLocalDataSource.get<List<FavoriteMovieEntity>>(eq("favorite_movies"), any<KType>()) } returns storedEntities
+        coEvery { secureLocalDataSource.get<Map<Int, FavoriteMovieEntity>>(eq("favorite_movies"), any<KType>()) } returns storedEntities
 
         val newRepository = FavoritesRepositoryImpl(secureLocalDataSource)
 
         newRepository.favoriteMovies.test {
             val movies = awaitItem()
-            // May emit empty list first, then loaded data
             if (movies.isEmpty()) {
                 val loadedMovies = awaitItem()
                 assertEquals(1, loadedMovies.size)
-                assertEquals("Stored Movie", loadedMovies.first().title)
+                assertEquals("Stored Movie", loadedMovies[1]?.title)
             } else {
                 assertEquals(1, movies.size)
-                assertEquals("Stored Movie", movies.first().title)
+                assertEquals("Stored Movie", movies[1]?.title)
             }
         }
     }
 
     @Test
     fun `init loads existing people from secure storage`() = runTest {
-        val storedEntities = listOf(
-            FavoritePersonEntity(
+        val storedEntities = mapOf(
+            1 to FavoritePersonEntity(
                 id = 1,
                 name = "Stored Person",
                 profileUrl = "https://example.com/profile.jpg"
             )
         )
 
-        coEvery { secureLocalDataSource.get<List<FavoritePersonEntity>>(eq("favorite_people"), any<KType>()) } returns storedEntities
+        coEvery { secureLocalDataSource.get<Map<Int, FavoritePersonEntity>>(eq("favorite_people"), any<KType>()) } returns storedEntities
 
         val newRepository = FavoritesRepositoryImpl(secureLocalDataSource)
 
         newRepository.favoritePeople.test {
             val people = awaitItem()
-            // May emit empty list first, then loaded data
             if (people.isEmpty()) {
                 val loadedPeople = awaitItem()
                 assertEquals(1, loadedPeople.size)
-                assertEquals("Stored Person", loadedPeople.first().name)
+                assertEquals("Stored Person", loadedPeople[1]?.name)
             } else {
                 assertEquals(1, people.size)
-                assertEquals("Stored Person", people.first().name)
+                assertEquals("Stored Person", people[1]?.name)
             }
         }
     }
@@ -260,12 +256,12 @@ class FavoritesRepositoryImplTest {
         )
 
         repository.favoriteMovies.test {
-            assertEquals(emptyList<FavoriteMovie>(), awaitItem())
+            assertEquals(emptyMap<Int, FavoriteMovie>(), awaitItem())
 
             repository.addFavoriteMovie(movie)
 
             val favorites = awaitItem()
-            val result = favorites.first()
+            val result = favorites[42]!!
 
             assertEquals(42, result.id)
             assertEquals("Test Title", result.title)
@@ -283,12 +279,12 @@ class FavoritesRepositoryImplTest {
         )
 
         repository.favoritePeople.test {
-            assertEquals(emptyList<FavoritePerson>(), awaitItem())
+            assertEquals(emptyMap<Int, FavoritePerson>(), awaitItem())
 
             repository.addFavoritePerson(person)
 
             val favorites = awaitItem()
-            val result = favorites.first()
+            val result = favorites[42]!!
 
             assertEquals(42, result.id)
             assertEquals("Test Name", result.name)
@@ -313,7 +309,7 @@ class FavoritesRepositoryImplTest {
             repository.removeFavoriteMovie(1)
             val remaining = awaitItem()
             assertEquals(1, remaining.size)
-            assertEquals(2, remaining.first().id)
+            assertEquals(2, remaining.values.first().id)
         }
     }
 
@@ -334,7 +330,7 @@ class FavoritesRepositoryImplTest {
             repository.removeFavoritePerson(1)
             val remaining = awaitItem()
             assertEquals(1, remaining.size)
-            assertEquals(2, remaining.first().id)
+            assertEquals(2, remaining.values.first().id)
         }
     }
 }

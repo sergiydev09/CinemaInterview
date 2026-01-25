@@ -2,8 +2,8 @@ package com.cinema.core.favorites.domain.usecase
 
 import com.cinema.core.favorites.domain.model.FavoritePerson
 import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -22,7 +22,7 @@ class TogglePersonFavoriteUseCaseTest {
 
     @Test
     fun `invoke adds person when not favorite`() = runTest {
-        coEvery { repository.isPersonFavorite(person.id) } returns flowOf(false)
+        every { repository.isPersonFavorite(person.id) } returns flowOf(false)
 
         useCase(person)
 
@@ -32,7 +32,7 @@ class TogglePersonFavoriteUseCaseTest {
 
     @Test
     fun `invoke removes person when already favorite`() = runTest {
-        coEvery { repository.isPersonFavorite(person.id) } returns flowOf(true)
+        every { repository.isPersonFavorite(person.id) } returns flowOf(true)
 
         useCase(person)
 

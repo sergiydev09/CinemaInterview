@@ -28,10 +28,10 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         favoritesRepository.favoriteMovies,
         favoritesRepository.favoritePeople
-    ) { movies, people ->
+    ) { moviesMap, peopleMap ->
         HomeUiState(
-            favoriteMovies = movies,
-            favoritePeople = people
+            favoriteMovies = moviesMap.values.toList(),
+            favoritePeople = peopleMap.values.toList()
         )
     }.stateIn(
         scope = viewModelScope,

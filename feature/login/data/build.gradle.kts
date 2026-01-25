@@ -15,7 +15,9 @@ android {
             localProperties.load(localPropertiesFile.inputStream())
         }
 
-        val tmdbToken = localProperties.getProperty("TMDB_API_TOKEN") ?: ""
+        val tmdbToken = localProperties.getProperty("TMDB_API_TOKEN")
+            ?: System.getenv("TMDB_API_TOKEN")
+            ?: "test-token-for-ci"
         buildConfigField("String", "TMDB_API_TOKEN", "\"$tmdbToken\"")
     }
 }
