@@ -88,14 +88,12 @@ class SecureLocalDataSourceTest {
             transform(mutablePrefs)
         }
 
-        every { dataStore.data } answers {
-            val prefs = mockk<Preferences>()
-            every { prefs[any<Preferences.Key<String>>()] } answers {
-                val key = firstArg<Preferences.Key<String>>()
-                inMemoryPreferences[key] as? String
-            }
-            flowOf(prefs)
+        val prefs = mockk<Preferences>()
+        every { prefs[any<Preferences.Key<String>>()] } answers {
+            val key = firstArg<Preferences.Key<String>>()
+            inMemoryPreferences[key] as? String
         }
+        every { dataStore.data } returns flowOf(prefs)
     }
 
     @After

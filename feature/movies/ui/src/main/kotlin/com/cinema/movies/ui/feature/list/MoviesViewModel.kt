@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
+import com.cinema.core.favorites.domain.model.FavoriteMovie
+import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.model.Movie
 import com.cinema.movies.domain.usecase.GetTrendingMoviesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +25,8 @@ data class MoviesUiState(
 
 @HiltViewModel
 class MoviesViewModel @Inject constructor(
-    private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase
+    private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
+    private val toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MoviesUiState())
@@ -32,6 +35,19 @@ class MoviesViewModel @Inject constructor(
     init {
         loadMovies()
     }
+
+    fun toggleFavorite(movie: Movie) {
+        viewModelScope.launch {
+            toggleMovieFavoriteUseCase(movie.toFavoriteMovie())
+        }
+    }
+
+    private fun Movie.toFavoriteMovie(): FavoriteMovie = FavoriteMovie(
+        id = id,
+        title = title,
+        posterUrl = posterUrl,
+        releaseDate = releaseDate
+    )
 
     fun loadMovies() {
         viewModelScope.launch {

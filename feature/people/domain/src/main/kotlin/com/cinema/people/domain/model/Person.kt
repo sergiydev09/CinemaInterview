@@ -6,7 +6,8 @@ data class Person(
     val profileUrl: String?,
     val popularity: Double,
     val knownForDepartment: String,
-    val knownFor: List<KnownForItem>
+    val knownFor: List<KnownForItem>,
+    val isFavorite: Boolean = false
 )
 
 data class PersonDetail(

@@ -26,8 +26,8 @@ class HomeViewModelTest {
     private lateinit var favoritesRepository: FavoritesRepository
     private val testDispatcher = StandardTestDispatcher()
 
-    private val favoriteMoviesFlow = MutableStateFlow<List<FavoriteMovie>>(emptyList())
-    private val favoritePeopleFlow = MutableStateFlow<List<FavoritePerson>>(emptyList())
+    private val favoriteMoviesFlow = MutableStateFlow<Map<Int, FavoriteMovie>>(emptyMap())
+    private val favoritePeopleFlow = MutableStateFlow<Map<Int, FavoritePerson>>(emptyMap())
 
     @Before
     fun setup() {
@@ -57,9 +57,9 @@ class HomeViewModelTest {
 
     @Test
     fun `uiState emits favorite movies from repository`() = runTest {
-        val movies = listOf(
-            createFavoriteMovie(1, "Movie 1"),
-            createFavoriteMovie(2, "Movie 2")
+        val movies = mapOf(
+            1 to createFavoriteMovie(1, "Movie 1"),
+            2 to createFavoriteMovie(2, "Movie 2")
         )
         favoriteMoviesFlow.value = movies
 
@@ -80,9 +80,9 @@ class HomeViewModelTest {
 
     @Test
     fun `uiState emits favorite people from repository`() = runTest {
-        val people = listOf(
-            createFavoritePerson(1, "Person 1"),
-            createFavoritePerson(2, "Person 2")
+        val people = mapOf(
+            1 to createFavoritePerson(1, "Person 1"),
+            2 to createFavoritePerson(2, "Person 2")
         )
         favoritePeopleFlow.value = people
 
@@ -103,7 +103,7 @@ class HomeViewModelTest {
 
     @Test
     fun `hasFavorites returns true when movies exist`() = runTest {
-        favoriteMoviesFlow.value = listOf(createFavoriteMovie(1, "Movie"))
+        favoriteMoviesFlow.value = mapOf(1 to createFavoriteMovie(1, "Movie"))
 
         val viewModel = createViewModel()
 
@@ -120,7 +120,7 @@ class HomeViewModelTest {
 
     @Test
     fun `hasFavorites returns true when people exist`() = runTest {
-        favoritePeopleFlow.value = listOf(createFavoritePerson(1, "Person"))
+        favoritePeopleFlow.value = mapOf(1 to createFavoritePerson(1, "Person"))
 
         val viewModel = createViewModel()
 
@@ -156,7 +156,7 @@ class HomeViewModelTest {
             assertFalse(awaitItem().hasFavorites)
 
             // Add a movie
-            favoriteMoviesFlow.value = listOf(createFavoriteMovie(1, "Movie"))
+            favoriteMoviesFlow.value = mapOf(1 to createFavoriteMovie(1, "Movie"))
             testDispatcher.scheduler.advanceUntilIdle()
 
             assertTrue(awaitItem().hasFavorites)

@@ -34,6 +34,7 @@ import com.cinema.people.ui.feature.list.PeopleUiState
 fun PeopleContent(
     uiState: PeopleUiState,
     onPersonClick: (Int) -> Unit,
+    onFavoriteClick: (Person) -> Unit,
     onTimeWindowChanged: (TimeWindow) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -87,7 +88,9 @@ fun PeopleContent(
                         ) { person ->
                             PersonItem(
                                 person = person,
+                                isFavorite = person.isFavorite,
                                 onClick = { onPersonClick(person.id) },
+                                onFavoriteClick = { onFavoriteClick(person) },
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -105,6 +108,7 @@ private fun PeopleContentLoadingPreview() {
         PeopleContent(
             uiState = PeopleUiState(isLoading = true),
             onPersonClick = {},
+            onFavoriteClick = {},
             onTimeWindowChanged = {},
             onRetry = {}
         )
@@ -126,7 +130,8 @@ private fun PeopleContentSuccessPreview() {
                         knownForDepartment = "Acting",
                         knownFor = listOf(
                             KnownForItem(1, "Inception", "movie", null)
-                        )
+                        ),
+                        isFavorite = true
                     ),
                     Person(
                         id = 2,
@@ -141,6 +146,7 @@ private fun PeopleContentSuccessPreview() {
                 )
             ),
             onPersonClick = {},
+            onFavoriteClick = {},
             onTimeWindowChanged = {},
             onRetry = {}
         )
@@ -154,6 +160,7 @@ private fun PeopleContentErrorPreview() {
         PeopleContent(
             uiState = PeopleUiState(error = "Network error"),
             onPersonClick = {},
+            onFavoriteClick = {},
             onTimeWindowChanged = {},
             onRetry = {}
         )

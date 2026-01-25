@@ -9,14 +9,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,12 +31,15 @@ import com.cinema.core.ui.compose.CinemaAsyncImage
 import com.cinema.core.ui.theme.CinemaTheme
 import com.cinema.people.domain.model.KnownForItem
 import com.cinema.people.domain.model.Person
+import com.cinema.people.ui.R
 import java.util.Locale
 
 @Composable
 fun PersonItem(
     person: Person,
+    isFavorite: Boolean,
     onClick: () -> Unit,
+    onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -88,6 +98,20 @@ fun PersonItem(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
+
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = stringResource(
+                        if (isFavorite) R.string.remove_from_favorites else R.string.add_to_favorites
+                    ),
+                    tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -108,7 +132,32 @@ private fun PersonItemPreview() {
                     KnownForItem(2, "Titanic", "movie", null)
                 )
             ),
-            onClick = {}
+            isFavorite = false,
+            onClick = {},
+            onFavoriteClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PersonItemFavoritePreview() {
+    CinemaTheme {
+        PersonItem(
+            person = Person(
+                id = 1,
+                name = "Leonardo DiCaprio",
+                profileUrl = null,
+                popularity = 85.5,
+                knownForDepartment = "Acting",
+                knownFor = listOf(
+                    KnownForItem(1, "Inception", "movie", null),
+                    KnownForItem(2, "Titanic", "movie", null)
+                )
+            ),
+            isFavorite = true,
+            onClick = {},
+            onFavoriteClick = {}
         )
     }
 }
