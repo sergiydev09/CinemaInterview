@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.session.SessionManager
 import com.cinema.core.domain.util.Result
 import com.cinema.login.domain.model.ValidationErrorType
-import com.cinema.login.domain.model.ValidationErrorType.*
+import com.cinema.login.domain.model.ValidationErrorType.USERNAME_TOO_SHORT
 import com.cinema.login.domain.repository.UserPreferencesRepository
 import com.cinema.login.domain.usecase.LoginUseCase
 import com.cinema.login.domain.usecase.ValidateCredentialsUseCase

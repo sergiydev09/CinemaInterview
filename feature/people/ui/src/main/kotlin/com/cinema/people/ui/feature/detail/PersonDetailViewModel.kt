@@ -57,9 +57,11 @@ class PersonDetailViewModel @Inject constructor(
                     is Result.Loading -> {
                         _uiState.update { it.copy(isLoading = true, error = null) }
                     }
+
                     is Result.Success -> {
                         _uiState.update { it.copy(isLoading = false, person = result.data) }
                     }
+
                     is Result.Error -> {
                         _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }

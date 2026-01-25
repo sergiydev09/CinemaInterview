@@ -1,13 +1,13 @@
 package com.cinema.core.data.di
 
 import com.cinema.core.data.network.AuthInterceptor
+import kotlinx.serialization.Serializable
 import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import kotlinx.serialization.Serializable
 
 class NetworkModuleTest {
 
@@ -100,8 +100,8 @@ class NetworkModuleTest {
         assertTrue(
             converterFactories.any {
                 it.javaClass.name.contains("kotlinx.serialization") ||
-                it.javaClass.name.contains("KotlinxSerialization") ||
-                it.javaClass.name.contains("asConverterFactory")
+                        it.javaClass.name.contains("KotlinxSerialization") ||
+                        it.javaClass.name.contains("asConverterFactory")
             }
         )
     }

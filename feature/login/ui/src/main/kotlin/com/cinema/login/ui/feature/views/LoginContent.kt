@@ -41,8 +41,8 @@ import com.cinema.login.domain.model.ValidationErrorType.PASSWORD_NO_UPPERCASE
 import com.cinema.login.domain.model.ValidationErrorType.PASSWORD_TOO_SHORT
 import com.cinema.login.domain.model.ValidationErrorType.USERNAME_TOO_SHORT
 import com.cinema.login.ui.R
-import com.cinema.login.ui.feature.extensions.toErrorString
 import com.cinema.login.ui.feature.LoginUiState
+import com.cinema.login.ui.feature.extensions.toErrorString
 
 @Composable
 fun LoginContent(

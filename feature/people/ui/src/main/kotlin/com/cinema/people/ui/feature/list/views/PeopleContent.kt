@@ -67,12 +67,14 @@ fun PeopleContent(
                 uiState.isLoading && uiState.people.isEmpty() -> {
                     LoadingContent()
                 }
+
                 uiState.error != null -> {
                     ErrorContent(
                         message = uiState.error,
                         onRetry = onRetry
                     )
                 }
+
                 else -> {
                     LazyColumn(
                         state = listState,

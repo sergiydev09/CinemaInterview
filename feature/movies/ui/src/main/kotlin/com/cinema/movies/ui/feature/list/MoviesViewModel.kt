@@ -46,9 +46,11 @@ class MoviesViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is Result.Success -> {
                         _uiState.update { it.copy(isLoading = false, movies = result.data) }
                     }
+
                     is Result.Error -> {
                         _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }

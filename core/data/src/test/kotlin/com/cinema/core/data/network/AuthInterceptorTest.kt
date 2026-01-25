@@ -3,7 +3,6 @@ package com.cinema.core.data.network
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response

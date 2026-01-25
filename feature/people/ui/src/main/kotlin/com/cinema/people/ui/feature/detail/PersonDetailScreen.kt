@@ -22,12 +22,14 @@ fun PersonDetailScreen(
         uiState.isLoading -> {
             LoadingContent()
         }
+
         error != null -> {
             ErrorContent(
                 message = error,
                 onRetry = viewModel::retry
             )
         }
+
         person != null -> {
             PersonDetailContent(
                 person = person,

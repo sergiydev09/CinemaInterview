@@ -22,12 +22,14 @@ fun MovieDetailScreen(
         uiState.isLoading -> {
             LoadingContent()
         }
+
         error != null -> {
             ErrorContent(
                 message = error,
                 onRetry = viewModel::retry
             )
         }
+
         movie != null -> {
             MovieDetailContent(
                 movie = movie,

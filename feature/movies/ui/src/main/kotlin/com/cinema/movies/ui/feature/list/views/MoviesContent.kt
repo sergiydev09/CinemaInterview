@@ -67,12 +67,14 @@ fun MoviesContent(
                 uiState.isLoading && uiState.movies.isEmpty() -> {
                     LoadingContent()
                 }
+
                 uiState.error != null -> {
                     ErrorContent(
                         message = uiState.error,
                         onRetry = onRetry
                     )
                 }
+
                 else -> {
                     LazyVerticalGrid(
                         state = gridState,

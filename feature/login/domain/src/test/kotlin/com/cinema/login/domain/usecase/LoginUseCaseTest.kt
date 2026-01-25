@@ -5,7 +5,6 @@ import com.cinema.core.domain.util.Result
 import com.cinema.login.domain.model.Credentials
 import com.cinema.login.domain.repository.LoginRepository
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
