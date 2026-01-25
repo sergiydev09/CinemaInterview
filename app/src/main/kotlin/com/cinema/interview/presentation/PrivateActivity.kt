@@ -1,73 +1,60 @@
 package com.cinema.interview.presentation
 
-import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.MotionEvent
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 import com.cinema.core.domain.session.SessionCallback
 import com.cinema.core.domain.session.SessionManager
-import com.cinema.interview.R
-import com.cinema.interview.databinding.ActivityPrivateBinding
+import com.cinema.core.ui.theme.CinemaTheme
+import com.cinema.interview.navigation.BottomNavBar
+import com.cinema.interview.navigation.MainNavGraph
+import com.cinema.interview.navigation.SessionNavigator
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-/**
- * Private Activity that hosts the main app content after authentication.
- * Contains the bottom navigation and NavHost for feature fragments.
- * Implements SessionCallback to handle session expiration.
- */
 @AndroidEntryPoint
-class PrivateActivity : AppCompatActivity(), SessionCallback {
+class PrivateActivity : ComponentActivity(), SessionCallback {
 
-    @Inject
-    lateinit var sessionManager: SessionManager
-
-    private lateinit var binding: ActivityPrivateBinding
-    private lateinit var navController: NavController
+    @Inject lateinit var sessionManager: SessionManager
+    @Inject lateinit var sessionNavigator: SessionNavigator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Check if session is valid
         if (!sessionManager.isSessionActive()) {
             navigateToLogin()
             return
         }
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        binding = ActivityPrivateBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        setupInsets()
-        setupNavigation()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+        )
         setupSessionManager()
-    }
 
-    private fun setupInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(binding.navHostFragment) { view, insets ->
-            view.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top)
-            insets
+        setContent {
+            CinemaTheme {
+                val navController = rememberNavController()
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = { BottomNavBar(navController) }
+                ) { paddingValues ->
+                    MainNavGraph(
+                        navController = navController,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
+            }
         }
-        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation) { view, insets ->
-            view.updatePadding(bottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom)
-            insets
-        }
-    }
-
-    private fun setupNavigation() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        navController = navHostFragment.navController
-
-        binding.bottomNavigation.setupWithNavController(navController)
     }
 
     private fun setupSessionManager() {
@@ -87,10 +74,7 @@ class PrivateActivity : AppCompatActivity(), SessionCallback {
     }
 
     private fun navigateToLogin() {
-        val intent = Intent(this, PublicActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
+        sessionNavigator.navigateToLogin(this)
     }
 
     override fun onDestroy() {

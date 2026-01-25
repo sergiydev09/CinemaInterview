@@ -4,11 +4,14 @@ import com.cinema.core.data.datasource.SecureLocalDataSource
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 class UserPreferencesRepositoryImplTest {
 
@@ -24,16 +27,20 @@ class UserPreferencesRepositoryImplTest {
     @Test
     fun `saveUsername saves username to secure storage`() = runTest {
         val username = "testuser"
+        val valueSlot = slot<String>()
+        val typeSlot = slot<KType>()
 
         repository.saveUsername(username)
 
-        coVerify { secureLocalDataSource.save("saved_username", username, String::class.java) }
+        coVerify { secureLocalDataSource.save("saved_username", capture(valueSlot), capture(typeSlot)) }
+        assertEquals(username, valueSlot.captured)
+        assertEquals(typeOf<String>(), typeSlot.captured)
     }
 
     @Test
     fun `getSavedUsername returns username from secure storage`() = runTest {
         val expectedUsername = "saveduser"
-        coEvery { secureLocalDataSource.get("saved_username", String::class.java) } returns expectedUsername
+        coEvery { secureLocalDataSource.get<Any>("saved_username", ofType<KType>()) } returns expectedUsername
 
         val result = repository.getSavedUsername()
 
@@ -42,7 +49,7 @@ class UserPreferencesRepositoryImplTest {
 
     @Test
     fun `getSavedUsername returns null when no username saved`() = runTest {
-        coEvery { secureLocalDataSource.get("saved_username", String::class.java) } returns null
+        coEvery { secureLocalDataSource.get<Any>("saved_username", ofType<KType>()) } returns null
 
         val result = repository.getSavedUsername()
 

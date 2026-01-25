@@ -6,6 +6,8 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 class DataConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -14,6 +16,8 @@ class DataConventionPlugin : Plugin<Project> {
                 apply("com.android.library")
                 apply("com.google.dagger.hilt.android")
                 apply("com.google.devtools.ksp")
+                apply("org.jetbrains.kotlin.plugin.serialization")
+                apply("jacoco")
             }
 
             extensions.configure<LibraryExtension> {
@@ -32,6 +36,57 @@ class DataConventionPlugin : Plugin<Project> {
                     sourceCompatibility = JavaVersion.VERSION_17
                     targetCompatibility = JavaVersion.VERSION_17
                 }
+
+                @Suppress("UnstableApiUsage")
+                testOptions {
+                    unitTests.all {
+                        it.extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
+                            isIncludeNoLocationClasses = true
+                            excludes = listOf("jdk.internal.*")
+                        }
+                    }
+                }
+            }
+
+            extensions.configure<JacocoPluginExtension> {
+                toolVersion = "0.8.11"
+            }
+
+            afterEvaluate {
+                tasks.register("jacocoTestReport", JacocoReport::class.java) {
+                    dependsOn("testDebugUnitTest")
+
+                    reports {
+                        xml.required.set(true)
+                        html.required.set(true)
+                    }
+
+                    val fileFilter = listOf(
+                        "**/R.class",
+                        "**/R\$*.class",
+                        "**/BuildConfig.*",
+                        "**/Manifest*.*",
+                        "**/*Test*.*",
+                        "android/**/*.*",
+                        "**/*_Hilt*.*",
+                        "**/Hilt_*.*",
+                        "**/*_Factory.*",
+                        "**/*_MembersInjector.*",
+                        "**/hilt_aggregated_deps/**"
+                    )
+
+                    val debugTree = fileTree("$buildDir/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug") {
+                        exclude(fileFilter)
+                    }
+
+                    val mainSrc = "$projectDir/src/main/kotlin"
+
+                    sourceDirectories.setFrom(files(mainSrc))
+                    classDirectories.setFrom(files(debugTree))
+                    executionData.setFrom(fileTree(buildDir) {
+                        include("jacoco/testDebugUnitTest.exec")
+                    })
+                }
             }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -41,6 +96,7 @@ class DataConventionPlugin : Plugin<Project> {
                 add("ksp", libs.findLibrary("hilt-compiler").get())
                 add("implementation", libs.findLibrary("kotlinx-coroutines-core").get())
                 add("implementation", libs.findLibrary("kotlinx-coroutines-android").get())
+                add("implementation", libs.findLibrary("kotlinx-serialization-json").get())
                 add("testImplementation", libs.findBundle("testing").get())
             }
         }

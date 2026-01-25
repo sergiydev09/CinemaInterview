@@ -48,13 +48,17 @@ class PeopleViewModel @Inject constructor(
             getTrendingPeopleUseCase(_uiState.value.selectedTimeWindow).collect { result ->
                 when (result) {
                     is Result.Loading -> {
-                        _uiState.update { it.copy(isLoading = true, error = null) }
+                        _uiState.update { state ->
+                            // Only show loading if we don't have data yet
+                            state.copy(
+                                isLoading = state.people.isEmpty(),
+                                error = null
+                            )
+                        }
                     }
-
                     is Result.Success -> {
                         _uiState.update { it.copy(isLoading = false, people = result.data) }
                     }
-
                     is Result.Error -> {
                         _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }

@@ -2,6 +2,9 @@ plugins {
     id("com.android.application")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("io.github.sergiydev09.mockkhttp") version "1.4.30"
 }
 
 android {
@@ -33,15 +36,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
-    }
-
     buildFeatures {
-        viewBinding = true
+        compose = true
     }
+}
+
+composeCompiler {
+    enableStrongSkippingMode = true
 }
 
 dependencies {
@@ -49,6 +50,8 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.domain)
     implementation(projects.core.ui)
+    implementation(projects.core.features.favorites.data)
+    implementation(projects.core.features.favorites.domain)
 
     // Feature modules
     implementation(projects.feature.login.ui)
@@ -64,15 +67,22 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.activity.ktx)
-    implementation(libs.androidx.fragment.ktx)
 
     // Lifecycle
-    implementation(libs.bundles.lifecycle)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Navigation
-    implementation(libs.bundles.navigation)
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.compose)
+    debugImplementation(libs.bundles.compose.debug)
+
+    // Coil Compose
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+    // Kotlin Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     // Hilt
     implementation(libs.hilt.android)
@@ -80,5 +90,4 @@ dependencies {
 
     // Testing
     testImplementation(libs.bundles.testing)
-    androidTestImplementation(libs.bundles.androidTesting)
 }

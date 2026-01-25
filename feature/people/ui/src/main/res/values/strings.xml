@@ -5,14 +5,20 @@
     <string name="this_week">This Week</string>
     <string name="person_photo_description">Person photo</string>
     <string name="person_detail">Person Details</string>
-    <string name="popularity">Popularity:</string>
+    <string name="popularity_format">Popularity: %s</string>
+    <string name="popularity_label">Popularity</string>
     <string name="known_for">Known For</string>
     <string name="no_known_works">No known works</string>
     <string name="back">Back</string>
-    <string name="biography">Biography</string>
+    <string name="biography_label">Biography</string>
     <string name="no_biography">No biography available</string>
-    <string name="birthday">Birthday:</string>
-    <string name="deathday">Died:</string>
-    <string name="place_of_birth">Place of birth:</string>
-    <string name="also_known_as">Also Known As</string>
+    <string name="personal_info_label">Personal Info</string>
+    <string name="birthday_label">Birthday</string>
+    <string name="born_label">Born</string>
+    <string name="died_label">Died</string>
+    <string name="deathday_label">Died</string>
+    <string name="place_of_birth_label">Place of Birth</string>
+    <string name="also_known_as_label">Also Known As</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="remove_from_favorites">Remove from favorites</string>
 </resources>

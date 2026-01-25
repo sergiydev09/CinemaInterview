@@ -1,42 +1,42 @@
 package com.cinema.movies.data.network.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MovieDetailResponse(
-    @Json(name = "id") val id: Int,
-    @Json(name = "title") val title: String,
-    @Json(name = "overview") val overview: String,
-    @Json(name = "poster_path") val posterPath: String?,
-    @Json(name = "backdrop_path") val backdropPath: String?,
-    @Json(name = "release_date") val releaseDate: String?,
-    @Json(name = "vote_average") val voteAverage: Double,
-    @Json(name = "vote_count") val voteCount: Int,
-    @Json(name = "popularity") val popularity: Double,
-    @Json(name = "runtime") val runtime: Int?,
-    @Json(name = "status") val status: String?,
-    @Json(name = "tagline") val tagline: String?,
-    @Json(name = "budget") val budget: Long,
-    @Json(name = "revenue") val revenue: Long,
-    @Json(name = "homepage") val homepage: String?,
-    @Json(name = "imdb_id") val imdbId: String?,
-    @Json(name = "original_language") val originalLanguage: String,
-    @Json(name = "original_title") val originalTitle: String,
-    @Json(name = "genres") val genres: List<GenreDto>?,
-    @Json(name = "production_companies") val productionCompanies: List<ProductionCompanyDto>?
+    @SerialName("id") val id: Int,
+    @SerialName("title") val title: String,
+    @SerialName("overview") val overview: String,
+    @SerialName("poster_path") val posterPath: String?,
+    @SerialName("backdrop_path") val backdropPath: String?,
+    @SerialName("release_date") val releaseDate: String? = null,
+    @SerialName("vote_average") val voteAverage: Double,
+    @SerialName("vote_count") val voteCount: Int,
+    @SerialName("popularity") val popularity: Double,
+    @SerialName("runtime") val runtime: Int?,
+    @SerialName("status") val status: String?,
+    @SerialName("tagline") val tagline: String?,
+    @SerialName("budget") val budget: Long,
+    @SerialName("revenue") val revenue: Long,
+    @SerialName("homepage") val homepage: String?,
+    @SerialName("imdb_id") val imdbId: String?,
+    @SerialName("original_language") val originalLanguage: String,
+    @SerialName("original_title") val originalTitle: String,
+    @SerialName("genres") val genres: List<GenreDto>? = null,
+    @SerialName("production_companies") val productionCompanies: List<ProductionCompanyDto>? = null
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class GenreDto(
-    @Json(name = "id") val id: Int,
-    @Json(name = "name") val name: String
+    @SerialName("id") val id: Int,
+    @SerialName("name") val name: String
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ProductionCompanyDto(
-    @Json(name = "id") val id: Int,
-    @Json(name = "name") val name: String,
-    @Json(name = "logo_path") val logoPath: String?,
-    @Json(name = "origin_country") val originCountry: String
+    @SerialName("id") val id: Int,
+    @SerialName("name") val name: String,
+    @SerialName("logo_path") val logoPath: String?,
+    @SerialName("origin_country") val originCountry: String
 )

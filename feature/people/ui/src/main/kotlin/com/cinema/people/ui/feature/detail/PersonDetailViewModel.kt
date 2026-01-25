@@ -4,6 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.util.Result
+import com.cinema.core.favorites.domain.model.FavoritePerson
+import com.cinema.core.favorites.domain.repository.FavoritesRepository
+import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.PersonDetail
 import com.cinema.people.domain.usecase.GetPersonDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,13 +20,16 @@ import javax.inject.Inject
 data class PersonDetailUiState(
     val isLoading: Boolean = false,
     val person: PersonDetail? = null,
+    val isFavorite: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
 class PersonDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getPersonDetailUseCase: GetPersonDetailUseCase
+    private val getPersonDetailUseCase: GetPersonDetailUseCase,
+    private val favoritesRepository: FavoritesRepository,
+    private val togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
 ) : ViewModel() {
 
     private val personId: Int = savedStateHandle.get<Int>(ARG_PERSON_ID) ?: 0
@@ -33,6 +39,15 @@ class PersonDetailViewModel @Inject constructor(
 
     init {
         loadPersonDetail()
+        observeFavoriteStatus()
+    }
+
+    private fun observeFavoriteStatus() {
+        viewModelScope.launch {
+            favoritesRepository.isPersonFavorite(personId).collect { isFavorite ->
+                _uiState.update { it.copy(isFavorite = isFavorite) }
+            }
+        }
     }
 
     fun loadPersonDetail() {
@@ -53,9 +68,22 @@ class PersonDetailViewModel @Inject constructor(
         }
     }
 
+    fun toggleFavorite() {
+        val person = _uiState.value.person ?: return
+        viewModelScope.launch {
+            togglePersonFavoriteUseCase(person.toFavoritePerson())
+        }
+    }
+
     fun retry() {
         loadPersonDetail()
     }
+
+    private fun PersonDetail.toFavoritePerson(): FavoritePerson = FavoritePerson(
+        id = id,
+        name = name,
+        profileUrl = profileUrl
+    )
 
     companion object {
         const val ARG_PERSON_ID = "personId"

@@ -1,45 +1,36 @@
 package com.cinema.people.data.network.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-/**
- * Response model for the trending people API endpoint.
- */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TrendingPeopleResponse(
-    @Json(name = "page") val page: Int,
-    @Json(name = "results") val results: List<PersonDto>,
-    @Json(name = "total_pages") val totalPages: Int,
-    @Json(name = "total_results") val totalResults: Int
+    @SerialName("page") val page: Int,
+    @SerialName("results") val results: List<PersonDto>,
+    @SerialName("total_pages") val totalPages: Int,
+    @SerialName("total_results") val totalResults: Int
 )
 
-/**
- * Data Transfer Object for a person from the TMDB API.
- */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PersonDto(
-    @Json(name = "id") val id: Int,
-    @Json(name = "name") val name: String,
-    @Json(name = "profile_path") val profilePath: String?,
-    @Json(name = "popularity") val popularity: Double,
-    @Json(name = "known_for_department") val knownForDepartment: String?,
-    @Json(name = "gender") val gender: Int,
-    @Json(name = "adult") val adult: Boolean,
-    @Json(name = "media_type") val mediaType: String? = null,
-    @Json(name = "known_for") val knownFor: List<KnownForDto>? = null
+    @SerialName("id") val id: Int,
+    @SerialName("name") val name: String,
+    @SerialName("profile_path") val profilePath: String?,
+    @SerialName("popularity") val popularity: Double,
+    @SerialName("known_for_department") val knownForDepartment: String? = null,
+    @SerialName("gender") val gender: Int,
+    @SerialName("adult") val adult: Boolean,
+    @SerialName("media_type") val mediaType: String? = null,
+    @SerialName("known_for") val knownFor: List<KnownForDto>? = null
 )
 
-/**
- * DTO representing a movie or TV show the person is known for.
- */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class KnownForDto(
-    @Json(name = "id") val id: Int,
-    @Json(name = "title") val title: String? = null,
-    @Json(name = "name") val name: String? = null,
-    @Json(name = "media_type") val mediaType: String,
-    @Json(name = "poster_path") val posterPath: String?,
-    @Json(name = "overview") val overview: String?,
-    @Json(name = "vote_average") val voteAverage: Double?
+    @SerialName("id") val id: Int,
+    @SerialName("title") val title: String? = null,
+    @SerialName("name") val name: String? = null,
+    @SerialName("media_type") val mediaType: String,
+    @SerialName("poster_path") val posterPath: String?,
+    @SerialName("overview") val overview: String?,
+    @SerialName("vote_average") val voteAverage: Double?
 )

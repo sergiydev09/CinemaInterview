@@ -12,7 +12,6 @@ dependencies {
 
     // Networking
     api(libs.bundles.networking)
-    ksp(libs.moshi.codegen)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

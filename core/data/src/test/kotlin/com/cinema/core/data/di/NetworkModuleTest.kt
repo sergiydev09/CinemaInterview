@@ -7,6 +7,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlinx.serialization.Serializable
 
 class NetworkModuleTest {
 
@@ -19,17 +20,16 @@ class NetworkModuleTest {
     }
 
     @Test
-    fun `provideMoshi returns configured Moshi instance`() {
-        val moshi = NetworkModule.provideMoshi()
+    fun `provideJson returns configured Json instance`() {
+        val json = NetworkModule.provideJson()
 
-        assertNotNull(moshi)
+        assertNotNull(json)
         // Verify it can serialize/deserialize Kotlin classes
-        val adapter = moshi.adapter(TestData::class.java)
-        val json = adapter.toJson(TestData("test", 42))
-        val parsed = adapter.fromJson(json)
+        val serialized = json.encodeToString(TestData.serializer(), TestData("test", 42))
+        val parsed = json.decodeFromString(TestData.serializer(), serialized)
 
-        assertEquals("test", parsed?.name)
-        assertEquals(42, parsed?.value)
+        assertEquals("test", parsed.name)
+        assertEquals(42, parsed.value)
     }
 
     @Test
@@ -67,37 +67,45 @@ class NetworkModuleTest {
 
     @Test
     fun `provideRetrofit has correct base URL`() {
-        val moshi = NetworkModule.provideMoshi()
+        val json = NetworkModule.provideJson()
         val loggingInterceptor = NetworkModule.provideLoggingInterceptor()
         val okHttpClient = NetworkModule.provideOkHttpClient(authInterceptor, loggingInterceptor)
 
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
+        val retrofit = NetworkModule.provideRetrofit(okHttpClient, json)
 
         assertEquals("https://api.themoviedb.org/3/", retrofit.baseUrl().toString())
     }
 
     @Test
     fun `provideRetrofit uses provided OkHttpClient`() {
-        val moshi = NetworkModule.provideMoshi()
+        val json = NetworkModule.provideJson()
         val loggingInterceptor = NetworkModule.provideLoggingInterceptor()
         val okHttpClient = NetworkModule.provideOkHttpClient(authInterceptor, loggingInterceptor)
 
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
+        val retrofit = NetworkModule.provideRetrofit(okHttpClient, json)
 
         assertEquals(okHttpClient, retrofit.callFactory())
     }
 
     @Test
-    fun `provideRetrofit has MoshiConverterFactory`() {
-        val moshi = NetworkModule.provideMoshi()
+    fun `provideRetrofit has KotlinxSerializationConverterFactory`() {
+        val json = NetworkModule.provideJson()
         val loggingInterceptor = NetworkModule.provideLoggingInterceptor()
         val okHttpClient = NetworkModule.provideOkHttpClient(authInterceptor, loggingInterceptor)
 
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
+        val retrofit = NetworkModule.provideRetrofit(okHttpClient, json)
 
         val converterFactories = retrofit.converterFactories()
-        assertTrue(converterFactories.any { it.javaClass.simpleName.contains("Moshi") })
+        // The KotlinxSerializationConverterFactory is an anonymous class, check by package name
+        assertTrue(
+            converterFactories.any {
+                it.javaClass.name.contains("kotlinx.serialization") ||
+                it.javaClass.name.contains("KotlinxSerialization") ||
+                it.javaClass.name.contains("asConverterFactory")
+            }
+        )
     }
 
+    @Serializable
     data class TestData(val name: String, val value: Int)
 }

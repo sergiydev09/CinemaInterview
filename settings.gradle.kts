@@ -32,6 +32,8 @@ include(":app")
 include(":core:data")
 include(":core:domain")
 include(":core:ui")
+include(":core:features:favorites:data")
+include(":core:features:favorites:domain")
 
 // Feature modules - Login
 include(":feature:login:data")

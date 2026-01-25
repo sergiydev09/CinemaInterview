@@ -1,36 +1,30 @@
 package com.cinema.movies.data.network.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-/**
- * Response model for the trending movies API endpoint.
- */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TrendingMoviesResponse(
-    @Json(name = "page") val page: Int,
-    @Json(name = "results") val results: List<MovieDto>,
-    @Json(name = "total_pages") val totalPages: Int,
-    @Json(name = "total_results") val totalResults: Int
+    @SerialName("page") val page: Int,
+    @SerialName("results") val results: List<MovieDto>,
+    @SerialName("total_pages") val totalPages: Int,
+    @SerialName("total_results") val totalResults: Int
 )
 
-/**
- * Data Transfer Object for a movie from the TMDB API.
- */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MovieDto(
-    @Json(name = "id") val id: Int,
-    @Json(name = "title") val title: String,
-    @Json(name = "overview") val overview: String,
-    @Json(name = "poster_path") val posterPath: String?,
-    @Json(name = "backdrop_path") val backdropPath: String?,
-    @Json(name = "release_date") val releaseDate: String?,
-    @Json(name = "vote_average") val voteAverage: Double,
-    @Json(name = "vote_count") val voteCount: Int,
-    @Json(name = "popularity") val popularity: Double,
-    @Json(name = "adult") val adult: Boolean,
-    @Json(name = "original_language") val originalLanguage: String,
-    @Json(name = "original_title") val originalTitle: String,
-    @Json(name = "genre_ids") val genreIds: List<Int>,
-    @Json(name = "media_type") val mediaType: String? = null
+    @SerialName("id") val id: Int,
+    @SerialName("title") val title: String,
+    @SerialName("overview") val overview: String,
+    @SerialName("poster_path") val posterPath: String?,
+    @SerialName("backdrop_path") val backdropPath: String?,
+    @SerialName("release_date") val releaseDate: String? = null,
+    @SerialName("vote_average") val voteAverage: Double,
+    @SerialName("vote_count") val voteCount: Int,
+    @SerialName("popularity") val popularity: Double,
+    @SerialName("adult") val adult: Boolean,
+    @SerialName("original_language") val originalLanguage: String,
+    @SerialName("original_title") val originalTitle: String,
+    @SerialName("genre_ids") val genreIds: List<Int>,
+    @SerialName("media_type") val mediaType: String? = null
 )

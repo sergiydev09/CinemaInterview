@@ -13,6 +13,4 @@ dependencies {
 
     // Networking
     implementation(libs.retrofit.core)
-    implementation(libs.moshi.core)
-    ksp(libs.moshi.codegen)
 }

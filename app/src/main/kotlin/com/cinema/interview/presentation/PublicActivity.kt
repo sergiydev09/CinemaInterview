@@ -1,45 +1,49 @@
 package com.cinema.interview.presentation
 
-import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import com.cinema.core.domain.session.SessionManager
-import com.cinema.interview.R
-import com.cinema.login.ui.LoginNavigator
+import com.cinema.core.ui.theme.CinemaTheme
+import com.cinema.interview.navigation.SessionNavigator
+import com.cinema.login.ui.feature.LoginScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-/**
- * Public Activity that hosts the login flow.
- * This activity is displayed when the user is not authenticated.
- * Contains a container for the LoginFragment.
- */
 @AndroidEntryPoint
-class PublicActivity : AppCompatActivity(), LoginNavigator {
+class PublicActivity : ComponentActivity() {
 
     @Inject
     lateinit var sessionManager: SessionManager
 
+    @Inject
+    lateinit var sessionNavigator: SessionNavigator
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Check if user is already logged in
         if (sessionManager.isSessionActive()) {
             navigateToPrivateArea()
             return
         }
 
-        setContentView(R.layout.activity_public)
-    }
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+        )
 
-    override fun onLoginSuccess() {
-        navigateToPrivateArea()
+        setContent {
+            CinemaTheme {
+                LoginScreen(
+                    onLoginSuccess = ::navigateToPrivateArea
+                )
+            }
+        }
     }
 
     private fun navigateToPrivateArea() {
-        val intent = Intent(this, PrivateActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
+        sessionNavigator.navigateToPrivateArea(this)
     }
 }

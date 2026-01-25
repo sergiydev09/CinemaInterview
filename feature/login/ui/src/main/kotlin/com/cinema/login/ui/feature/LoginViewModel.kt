@@ -5,10 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.session.SessionManager
 import com.cinema.core.domain.util.Result
 import com.cinema.login.domain.model.ValidationErrorType
-import com.cinema.login.domain.usecase.ClearUsernameUseCase
-import com.cinema.login.domain.usecase.GetSavedUsernameUseCase
+import com.cinema.login.domain.model.ValidationErrorType.*
+import com.cinema.login.domain.repository.UserPreferencesRepository
 import com.cinema.login.domain.usecase.LoginUseCase
-import com.cinema.login.domain.usecase.SaveUsernameUseCase
 import com.cinema.login.domain.usecase.ValidateCredentialsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -52,9 +51,7 @@ sealed class LoginEvent {
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val validateCredentialsUseCase: ValidateCredentialsUseCase,
-    private val getSavedUsernameUseCase: GetSavedUsernameUseCase,
-    private val saveUsernameUseCase: SaveUsernameUseCase,
-    private val clearUsernameUseCase: ClearUsernameUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -70,20 +67,12 @@ class LoginViewModel @Inject constructor(
 
     private fun loadSavedUsername() {
         viewModelScope.launch {
-            getSavedUsernameUseCase().collect { result ->
-                when (result) {
-                    is Result.Success -> {
-                        result.data?.let { savedUsername ->
-                            _uiState.update {
-                                it.copy(
-                                    username = savedUsername,
-                                    rememberUsername = true
-                                )
-                            }
-                        }
-                    }
-                    is Result.Error -> { /* Ignore errors loading saved username */ }
-                    is Result.Loading -> { /* No loading state needed for local operation */ }
+            userPreferencesRepository.getSavedUsername()?.let { savedUsername ->
+                _uiState.update {
+                    it.copy(
+                        username = savedUsername,
+                        rememberUsername = true
+                    )
                 }
             }
         }
@@ -168,9 +157,9 @@ class LoginViewModel @Inject constructor(
 
         // Save or clear username based on remember preference (ignore errors for local operations)
         if (state.rememberUsername) {
-            saveUsernameUseCase(state.username).collect { /* Fire and forget */ }
+            userPreferencesRepository.saveUsername(state.username)
         } else {
-            clearUsernameUseCase().collect { /* Fire and forget */ }
+            userPreferencesRepository.clearUsername()
         }
 
         sessionManager.startSession(token)
@@ -179,8 +168,8 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun handleValidationErrors(errors: List<ValidationErrorType>) {
-        val usernameErrors = errors.filter { it == ValidationErrorType.USERNAME_TOO_SHORT }
-        val passwordErrors = errors.filter { it != ValidationErrorType.USERNAME_TOO_SHORT }
+        val usernameErrors = errors.filter { it == USERNAME_TOO_SHORT }
+        val passwordErrors = errors.filter { it != USERNAME_TOO_SHORT }
 
         _uiState.update {
             it.copy(

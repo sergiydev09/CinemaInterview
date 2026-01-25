@@ -4,4 +4,9 @@
     <string name="welcome_subtitle">Discover trending movies and popular people in the entertainment industry.</string>
     <string name="feature_hint">Use the bottom navigation to explore Movies and People</string>
     <string name="welcome_icon_description">Welcome icon</string>
+    <string name="your_favorites">Your Favorites</string>
+    <string name="favorite_movies">Movies</string>
+    <string name="favorite_people">People</string>
+    <string name="no_favorites_title">No favorites yet</string>
+    <string name="no_favorites_subtitle">Browse movies and people, then tap the heart icon to add them to your favorites.</string>
 </resources>

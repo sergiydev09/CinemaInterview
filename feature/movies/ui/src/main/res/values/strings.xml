@@ -8,11 +8,16 @@
     <string name="movie_backdrop_description">Movie backdrop</string>
     <string name="back">Back</string>
     <string name="overview">Overview</string>
+    <string name="overview_label">Overview</string>
     <string name="no_overview">No overview available</string>
-    <string name="genres">Genres</string>
-    <string name="budget">Budget:</string>
-    <string name="revenue">Revenue:</string>
-    <string name="production_companies">Production Companies</string>
+    <string name="genres_label">Genres</string>
+    <string name="budget_label">Budget</string>
+    <string name="revenue_label">Revenue</string>
+    <string name="production_companies_label">Production Companies</string>
+    <string name="details_label">Details</string>
+    <string name="vote_count_label">Vote count</string>
     <string name="vote_count_format">(%,d votes)</string>
     <string name="runtime_format">%d min</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="remove_from_favorites">Remove from favorites</string>
 </resources>

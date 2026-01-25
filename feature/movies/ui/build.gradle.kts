@@ -9,11 +9,6 @@ android {
 dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.domain)
+    implementation(projects.core.features.favorites.domain)
     implementation(projects.feature.movies.domain)
-
-    // Navigation
-    implementation(libs.bundles.navigation)
-
-    // Image Loading
-    implementation(libs.coil)
 }

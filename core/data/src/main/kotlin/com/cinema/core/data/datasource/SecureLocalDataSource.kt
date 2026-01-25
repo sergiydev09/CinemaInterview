@@ -6,27 +6,27 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.crypto.tink.Aead
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
-/**
- * DataSource for secure encrypted storage using Tink and DataStore.
- * Handles encryption/decryption and storage of sensitive data using AES-GCM.
- * Supports any serializable type through Moshi.
- */
 @Singleton
 class SecureLocalDataSource @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val aead: Aead,
-    private val moshi: Moshi
+    private val json: Json
 ) {
 
-    suspend fun <T> save(key: String, value: T, clazz: Class<T>) {
-        val json = moshi.adapter(clazz).toJson(value)
-        val encrypted = aead.encrypt(json.toByteArray(Charsets.UTF_8), null)
+    suspend fun <T> save(key: String, value: T, type: KType) {
+        val serializer = json.serializersModule.serializer(type)
+        val jsonString = json.encodeToString(serializer, value)
+        val encrypted = aead.encrypt(jsonString.toByteArray(Charsets.UTF_8), null)
         val encoded = Base64.encodeToString(encrypted, Base64.DEFAULT)
         val prefKey = stringPreferencesKey(key)
         dataStore.edit { preferences ->
@@ -34,7 +34,7 @@ class SecureLocalDataSource @Inject constructor(
         }
     }
 
-    suspend fun <T> get(key: String, clazz: Class<T>): T? {
+    suspend fun <T> get(key: String, type: KType): T? {
         val prefKey = stringPreferencesKey(key)
         val encoded = dataStore.data.map { preferences ->
             preferences[prefKey]
@@ -43,8 +43,10 @@ class SecureLocalDataSource @Inject constructor(
         return try {
             val encrypted = Base64.decode(encoded, Base64.DEFAULT)
             val decrypted = aead.decrypt(encrypted, null)
-            val json = String(decrypted, Charsets.UTF_8)
-            moshi.adapter(clazz).fromJson(json)
+            val jsonString = String(decrypted, Charsets.UTF_8)
+            val serializer = json.serializersModule.serializer(type)
+            @Suppress("UNCHECKED_CAST")
+            json.decodeFromString(serializer, jsonString) as T
         } catch (_: Exception) {
             remove(key)
             null
@@ -65,10 +67,12 @@ class SecureLocalDataSource @Inject constructor(
     }
 }
 
+@OptIn(InternalSerializationApi::class)
 suspend inline fun <reified T> SecureLocalDataSource.save(key: String, value: T) {
-    save(key, value, T::class.java)
+    save(key, value, typeOf<T>())
 }
 
+@OptIn(InternalSerializationApi::class)
 suspend inline fun <reified T> SecureLocalDataSource.get(key: String): T? {
-    return get(key, T::class.java)
+    return get(key, typeOf<T>())
 }

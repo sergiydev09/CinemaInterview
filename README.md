@@ -11,27 +11,33 @@ This project follows **Clean Architecture** principles with a modular approach:
 ```
 CinemaInterview/
 ├── app/                    # Application module
+│   └── navigation/        # Main NavGraph, BottomNavBar, SessionNavigator
 ├── core/
 │   ├── data/              # Networking, session, security, image URL utilities
 │   ├── domain/            # Result wrapper, Flow extensions, SessionManager
-│   └── ui/                # Base classes, UI components, extensions
+│   ├── features/          # Shared features that connect other features
+│   │   └── favorites/     # Favorites management (used by movies, people, home)
+│   │       ├── data/      # Repository implementation, entities
+│   │       └── domain/    # Use cases, repository interface, models
+│   └── ui/                # Compose components, theme, navigation utilities
+│       ├── compose/       # Reusable composables (LoadingContent, ErrorContent, etc.)
+│       ├── theme/         # Material 3 theme (colors, typography, shapes)
+│       └── navigation/    # DeeplinkScheme utilities
 └── feature/
+    ├── home/
+    │   └── ui/            # HomeScreen with favorites display
     ├── login/
     │   ├── data/          # Repository implementations, data sources
     │   ├── domain/        # Use cases, repository interfaces, models
-    │   └── ui/            # Fragments, ViewModels, adapters
-    ├── home/
-    │   ├── data/
-    │   ├── domain/
-    │   └── ui/
+    │   └── ui/            # Screens, ViewModels, views
     ├── movies/
     │   ├── data/
     │   ├── domain/
-    │   └── ui/
+    │   └── ui/            # MoviesScreen, MovieDetailScreen
     └── people/
         ├── data/
         ├── domain/
-        └── ui/
+        └── ui/            # PeopleScreen, PersonDetailScreen
 ```
 
 ### Key Technologies
@@ -43,16 +49,17 @@ CinemaInterview/
 
 ### Libraries & Frameworks
 
-| Category     | Library                            |
-|--------------|------------------------------------|
-| DI           | Hilt                               |
-| Networking   | Retrofit + OkHttp + Moshi          |
-| UI           | Material Design 3, ViewBinding, XML|
-| Architecture | MVVM, StateFlow, Coroutines Flow   |
-| Storage      | DataStore + Tink (encryption)      |
-| Image Loading| Coil                               |
-| Navigation   | Jetpack Navigation                 |
-| Testing      | JUnit, MockK, Turbine              |
+| Category       | Library                                              |
+|----------------|------------------------------------------------------|
+| DI             | Hilt                                                 |
+| Networking     | Retrofit + OkHttp + Moshi                            |
+| UI             | **Jetpack Compose** + Material Design 3              |
+| Architecture   | MVVM, StateFlow, Coroutines Flow                     |
+| Storage        | DataStore + Tink (encryption)                        |
+| Image Loading  | Coil 3 (Compose)                                     |
+| Navigation     | **Compose Navigation** (type-safe with serialization)|
+| Serialization  | kotlinx-serialization-json                           |
+| Testing        | JUnit, MockK, Turbine                                |
 
 ## Features
 
@@ -62,21 +69,25 @@ CinemaInterview/
 - Session management with automatic token handling
 
 ### 2. Home Screen
-- Welcome message and navigation hints
+- Welcome message with user's name
+- **Favorite movies** horizontal list
+- **Favorite people** horizontal list
 - Bottom navigation to Movies and People
 
 ### 3. Movies Screen
-- Trending movies list with grid layout
-- Day/Week time window filter
+- Trending movies list with LazyVerticalGrid
+- Day/Week time window filter toggle
 - Movie posters with ratings and release year
-- Movie detail view with full information
+- Movie detail view with collapsing header
+- **Favorite toggle** on detail screen
 - Loading and error states
 
 ### 4. People Screen
-- Trending people list with linear layout
-- Day/Week time window filter
+- Trending people list with LazyColumn
+- Day/Week time window filter toggle
 - Profile photos with known works
-- Person detail view with biography
+- Person detail view with collapsing header
+- **Favorite toggle** on detail screen
 - Loading and error states
 
 ## Architecture Highlights
@@ -85,7 +96,7 @@ CinemaInterview/
 
 1. **Data Layer**: DTOs, Mappers, DataSources, Repository implementations
 2. **Domain Layer**: Models, Repository interfaces, Use Cases, Result wrapper
-3. **UI Layer**: Fragments (XML), ViewModels (StateFlow), Adapters
+3. **UI Layer**: Compose Screens, ViewModels (StateFlow), UI State classes
 
 ### Repository & UseCase Pattern
 
@@ -129,20 +140,86 @@ fun <T> Flow<T>.asResult(): Flow<Result<T>> = this
     .catch { emit(Result.Error(it.message ?: "Unknown error", it)) }
 ```
 
+### State Management
+
+UI state is managed with **StateFlow** and observed using `collectAsStateWithLifecycle()`:
+
+```kotlin
+// ViewModel
+data class MoviesUiState(
+    val movies: List<Movie> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val timeWindow: TimeWindow = TimeWindow.DAY
+)
+
+private val _uiState = MutableStateFlow(MoviesUiState())
+val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
+```
+
+```kotlin
+// Screen Composable
+@Composable
+fun MoviesScreen(viewModel: MoviesViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // Render based on uiState
+}
+```
+
+One-time events (navigation, snackbars) use `SharedFlow<Event>` collected in `LaunchedEffect`.
+
 ### Dependency Injection
 
 Using **Hilt** for dependency injection:
 - `@HiltAndroidApp` for Application class
-- `@AndroidEntryPoint` for Activities and Fragments
-- `@HiltViewModel` for ViewModels
+- `@AndroidEntryPoint` for Activities
+- `@HiltViewModel` for ViewModels (injected via `hiltViewModel()` in Compose)
 - `@Inject` for constructor injection
 - `@Module` + `@InstallIn` for providing dependencies
 
 ### Navigation
 
-- **PublicActivity**: Hosts login flow
-- **PrivateActivity**: Hosts authenticated content with BottomNavigationView
-- Features don't know each other; navigation uses string-based routes
+**Type-Safe Compose Navigation** with `kotlinx-serialization`:
+
+- **Routes** are `@Serializable` data classes/objects for type safety:
+  ```kotlin
+  @Serializable data object HomeRoute
+  @Serializable data class MovieDetailRoute(val movieId: Int)
+  @Serializable data class PersonDetailRoute(val personId: Int)
+  ```
+
+- **Deep Linking** with custom scheme (`cinema://movies`, `cinema://movie?movieId=123`)
+
+- **Activity Structure**:
+  - **PublicActivity**: Hosts login flow
+  - **PrivateActivity**: Hosts `NavHost` with `BottomNavigationBar`
+
+- **SessionNavigator**: Handles authentication-level navigation between activities
+
+- Features don't know each other; navigation callbacks are injected from the main NavGraph
+
+### Compose UI Components
+
+Reusable composables in `core/ui/compose/`:
+
+| Component              | Description                                          |
+|------------------------|------------------------------------------------------|
+| `LoadingContent`       | Centered loading spinner with optional message       |
+| `ErrorContent`         | Error display with warning icon and retry button     |
+| `LoadingButton`        | Button with loading state and spinner                |
+| `CinemaAsyncImage`     | Coil 3 AsyncImage wrapper for image loading          |
+| `CollapsingHeaderLayout`| Custom layout with collapsing header animation      |
+| `InlineError`          | Inline error messages for forms                      |
+| `TimeWindowToggle`     | Day/Week toggle for trending filters                 |
+
+### Theme
+
+Material 3 dark theme in `core/ui/theme/`:
+
+- **Colors**: Dark blue primary (#1A237E), gold accent (#FFC107), dark surface (#121212)
+- **Typography**: Full Material 3 type scale
+- **Shapes**: Material 3 shape definitions
+- **CinemaTheme**: Root composable wrapping the entire app
 
 ### Core Utilities
 
@@ -178,6 +255,25 @@ The implementation (`SessionManagerImpl`) coordinates with `AuthInterceptor` to 
 // Usage example
 secureDataSource.save("username", "john_doe")
 val username: String? = secureDataSource.get("username")
+```
+
+### Favorites Module
+
+**core/features/favorites** provides local favorites management (shared across multiple features):
+
+- **Domain**: `FavoritesRepository`, `FavoriteMovie`, `FavoritePerson` models
+- **Use Cases**: `ToggleMovieFavoriteUseCase`, `TogglePersonFavoriteUseCase`
+- **Data**: In-memory repository implementation with reactive `Flow` updates
+
+```kotlin
+// Toggle favorite from ViewModel
+viewModelScope.launch {
+    toggleMovieFavoriteUseCase(movie)
+}
+
+// Observe favorites reactively
+favoritesRepository.getFavoriteMovies()
+    .collect { movies -> /* update UI */ }
 ```
 
 ## Building & Running
@@ -231,13 +327,18 @@ Testing libraries:
 ## Roadmap
 
 - [ ] **Build Variants**: Add `offline` build variant for testing without network
-- [ ] **Jetpack Compose**: Create branch with Compose UI (no Fragments)
-- [ ] **Theming**: Implement dynamic theming with Material 3
+- [x] **Jetpack Compose**: Migrated to Compose UI (no Fragments)
+- [x] **Theming**: Implemented Material 3 dark theme
+- [x] **Favorites**: Added local favorites management
 - [ ] **Decorator Pattern**: Apply decorator for cross-cutting concerns (logging, caching)
+- [ ] **Persistent Favorites**: Store favorites with Room database
 
 ## Project Conventions
 
 - Gradle files use **KTS** format
 - Dependencies managed via **Version Catalogs** (libs.versions.toml)
-- XML layouts with **ViewBinding**
+- UI built entirely with **Jetpack Compose** (no XML layouts)
+- **Compose BOM** (2026.01.00) for consistent Compose versions
+- Navigation uses **type-safe routes** with `@Serializable` classes
 - Coroutines **Flow** for reactive streams
+- **StateFlow** for UI state management in ViewModels

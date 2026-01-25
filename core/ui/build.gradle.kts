@@ -9,7 +9,4 @@ android {
 dependencies {
     // Core domain module
     implementation(projects.core.domain)
-
-    // Image Loading
-    api(libs.coil)
 }

@@ -38,7 +38,13 @@ class MoviesViewModel @Inject constructor(
             getTrendingMoviesUseCase(_uiState.value.selectedTimeWindow).collect { result ->
                 when (result) {
                     is Result.Loading -> {
-                        _uiState.update { it.copy(isLoading = true, error = null) }
+                        _uiState.update { state ->
+                            // Only show loading if we don't have data yet
+                            state.copy(
+                                isLoading = state.movies.isEmpty(),
+                                error = null
+                            )
+                        }
                     }
                     is Result.Success -> {
                         _uiState.update { it.copy(isLoading = false, movies = result.data) }

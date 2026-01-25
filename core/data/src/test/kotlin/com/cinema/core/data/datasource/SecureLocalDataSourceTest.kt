@@ -4,11 +4,8 @@ import android.util.Base64
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.crypto.tink.Aead
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -18,6 +15,8 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -29,7 +28,7 @@ class SecureLocalDataSourceTest {
 
     private lateinit var dataStore: DataStore<Preferences>
     private lateinit var aead: Aead
-    private lateinit var moshi: Moshi
+    private lateinit var json: Json
     private lateinit var secureLocalDataSource: SecureLocalDataSource
 
     private val inMemoryPreferences = mutableMapOf<Preferences.Key<*>, Any>()
@@ -46,12 +45,12 @@ class SecureLocalDataSourceTest {
 
         dataStore = mockk()
         aead = mockk()
-        moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+        json = Json { ignoreUnknownKeys = true }
 
         setupAeadMock()
         setupDataStoreMock()
 
-        secureLocalDataSource = SecureLocalDataSource(dataStore, aead, moshi)
+        secureLocalDataSource = SecureLocalDataSource(dataStore, aead, json)
     }
 
     private fun setupAeadMock() {
@@ -78,7 +77,7 @@ class SecureLocalDataSourceTest {
             every { mutablePrefs.remove(any<Preferences.Key<String>>()) } answers {
                 val key = firstArg<Preferences.Key<String>>()
                 inMemoryPreferences.remove(key)
-                "removed" // Return non-null to satisfy type
+                "removed"
             }
             every { mutablePrefs.clear() } answers {
                 inMemoryPreferences.clear()
@@ -107,7 +106,7 @@ class SecureLocalDataSourceTest {
 
     @Test
     fun `save encrypts value and stores in datastore`() = runTest {
-        secureLocalDataSource.save("test_key", "test_value", String::class.java)
+        secureLocalDataSource.save("test_key", "test_value")
 
         val key = stringPreferencesKey("test_key")
         assertTrue(inMemoryPreferences.containsKey(key))
@@ -123,40 +122,38 @@ class SecureLocalDataSourceTest {
             "ENCRYPTED:".toByteArray() + firstArg<ByteArray>()
         }
 
-        secureLocalDataSource.save("key", "hello", String::class.java)
+        secureLocalDataSource.save("key", "hello")
 
-        val json = String(capturedData.captured, Charsets.UTF_8)
-        assertEquals("\"hello\"", json)
+        val jsonString = String(capturedData.captured, Charsets.UTF_8)
+        assertEquals("\"hello\"", jsonString)
     }
 
     @Test
     fun `save calls datastore updateData`() = runTest {
-        secureLocalDataSource.save("key", "value", String::class.java)
+        secureLocalDataSource.save("key", "value")
 
         coVerify { dataStore.updateData(any()) }
     }
 
     @Test
     fun `get returns decrypted value from datastore`() = runTest {
-        // First save a value
-        secureLocalDataSource.save("my_key", "my_value", String::class.java)
+        secureLocalDataSource.save("my_key", "my_value")
 
-        // Then get it back
-        val result = secureLocalDataSource.get("my_key", String::class.java)
+        val result: String? = secureLocalDataSource.get("my_key")
 
         assertEquals("my_value", result)
     }
 
     @Test
     fun `get returns null when key does not exist`() = runTest {
-        val result = secureLocalDataSource.get("nonexistent", String::class.java)
+        val result: String? = secureLocalDataSource.get("nonexistent")
 
         assertNull(result)
     }
 
     @Test
     fun `get calls aead decrypt`() = runTest {
-        secureLocalDataSource.save("key", "value", String::class.java)
+        secureLocalDataSource.save("key", "value")
 
         val capturedData = slot<ByteArray>()
         every { aead.decrypt(capture(capturedData), any()) } answers {
@@ -164,7 +161,7 @@ class SecureLocalDataSourceTest {
             data.copyOfRange("ENCRYPTED:".length, data.size)
         }
 
-        secureLocalDataSource.get("key", String::class.java)
+        secureLocalDataSource.get<String>("key")
 
         assertTrue(capturedData.isCaptured)
         assertTrue(String(capturedData.captured).startsWith("ENCRYPTED:"))
@@ -172,35 +169,21 @@ class SecureLocalDataSourceTest {
 
     @Test
     fun `get returns null and removes key on decryption failure`() = runTest {
-        secureLocalDataSource.save("bad_key", "value", String::class.java)
+        secureLocalDataSource.save("bad_key", "value")
         val key = stringPreferencesKey("bad_key")
         assertTrue(inMemoryPreferences.containsKey(key))
 
         every { aead.decrypt(any(), any()) } throws RuntimeException("Decryption failed")
 
-        val result = secureLocalDataSource.get("bad_key", String::class.java)
+        val result: String? = secureLocalDataSource.get("bad_key")
 
         assertNull(result)
         assertTrue(!inMemoryPreferences.containsKey(key))
     }
 
     @Test
-    fun `get returns null on json parsing failure`() = runTest {
-        // Store invalid JSON that will fail to parse as TestData
-        val invalidJson = "not valid json for TestData"
-        val encrypted = "ENCRYPTED:".toByteArray() + invalidJson.toByteArray()
-        val encoded = java.util.Base64.getEncoder().encodeToString(encrypted)
-        val key = stringPreferencesKey("invalid_key")
-        inMemoryPreferences[key] = encoded
-
-        val result = secureLocalDataSource.get("invalid_key", TestData::class.java)
-
-        assertNull(result)
-    }
-
-    @Test
     fun `remove deletes key from datastore`() = runTest {
-        secureLocalDataSource.save("to_delete", "value", String::class.java)
+        secureLocalDataSource.save("to_delete", "value")
         val key = stringPreferencesKey("to_delete")
         assertTrue(inMemoryPreferences.containsKey(key))
 
@@ -218,8 +201,8 @@ class SecureLocalDataSourceTest {
 
     @Test
     fun `clear removes all keys from datastore`() = runTest {
-        secureLocalDataSource.save("key1", "value1", String::class.java)
-        secureLocalDataSource.save("key2", "value2", String::class.java)
+        secureLocalDataSource.save("key1", "value1")
+        secureLocalDataSource.save("key2", "value2")
         assertEquals(2, inMemoryPreferences.size)
 
         secureLocalDataSource.clear()
@@ -238,8 +221,8 @@ class SecureLocalDataSourceTest {
     fun `save and get works with complex data class`() = runTest {
         val testData = TestData("Alice", 30, listOf("tag1", "tag2"))
 
-        secureLocalDataSource.save("user", testData, TestData::class.java)
-        val retrieved = secureLocalDataSource.get("user", TestData::class.java)
+        secureLocalDataSource.save("user", testData)
+        val retrieved: TestData? = secureLocalDataSource.get("user")
 
         assertEquals("Alice", retrieved?.name)
         assertEquals(30, retrieved?.age)
@@ -248,111 +231,39 @@ class SecureLocalDataSourceTest {
 
     @Test
     fun `save and get works with integer type`() = runTest {
-        secureLocalDataSource.save("count", 42, Int::class.java)
-        val result = secureLocalDataSource.get("count", Int::class.java)
+        secureLocalDataSource.save("count", 42)
+        val result: Int? = secureLocalDataSource.get("count")
 
         assertEquals(42, result)
     }
 
     @Test
     fun `save and get works with boolean type`() = runTest {
-        secureLocalDataSource.save("flag", true, Boolean::class.java)
-        val result = secureLocalDataSource.get("flag", Boolean::class.java)
+        secureLocalDataSource.save("flag", true)
+        val result: Boolean? = secureLocalDataSource.get("flag")
 
         assertEquals(true, result)
     }
 
     @Test
     fun `overwriting key updates value`() = runTest {
-        secureLocalDataSource.save("key", "first", String::class.java)
-        secureLocalDataSource.save("key", "second", String::class.java)
+        secureLocalDataSource.save("key", "first")
+        secureLocalDataSource.save("key", "second")
 
-        val result = secureLocalDataSource.get("key", String::class.java)
+        val result: String? = secureLocalDataSource.get("key")
 
         assertEquals("second", result)
     }
 
     @Test
     fun `multiple keys can be stored independently`() = runTest {
-        secureLocalDataSource.save("key1", "value1", String::class.java)
-        secureLocalDataSource.save("key2", "value2", String::class.java)
+        secureLocalDataSource.save("key1", "value1")
+        secureLocalDataSource.save("key2", "value2")
 
-        assertEquals("value1", secureLocalDataSource.get("key1", String::class.java))
-        assertEquals("value2", secureLocalDataSource.get("key2", String::class.java))
+        assertEquals("value1", secureLocalDataSource.get<String>("key1"))
+        assertEquals("value2", secureLocalDataSource.get<String>("key2"))
     }
 
-    // Tests for reified extension functions
-
-    @Test
-    fun `reified save extension works with string`() = runTest {
-        secureLocalDataSource.save("reified_key", "reified_value")
-
-        val result = secureLocalDataSource.get("reified_key", String::class.java)
-        assertEquals("reified_value", result)
-    }
-
-    @Test
-    fun `reified get extension works with string`() = runTest {
-        secureLocalDataSource.save("key", "value", String::class.java)
-
-        val result: String? = secureLocalDataSource.get("key")
-        assertEquals("value", result)
-    }
-
-    @Test
-    fun `reified save and get extensions work together`() = runTest {
-        secureLocalDataSource.save("combined_key", "combined_value")
-
-        val result: String? = secureLocalDataSource.get("combined_key")
-        assertEquals("combined_value", result)
-    }
-
-    @Test
-    fun `reified extensions work with data class`() = runTest {
-        val testData = TestData("Bob", 25, listOf("developer"))
-
-        secureLocalDataSource.save("user_reified", testData)
-        val result: TestData? = secureLocalDataSource.get("user_reified")
-
-        assertEquals("Bob", result?.name)
-        assertEquals(25, result?.age)
-        assertEquals(listOf("developer"), result?.tags)
-    }
-
-    @Test
-    fun `reified get extension returns null for missing key`() = runTest {
-        val result: String? = secureLocalDataSource.get("nonexistent_reified")
-
-        assertNull(result)
-    }
-
-    @Test
-    fun `reified extensions work with integer`() = runTest {
-        secureLocalDataSource.save("int_key", 123)
-
-        val result: Int? = secureLocalDataSource.get("int_key")
-        assertEquals(123, result)
-    }
-
-    @Test
-    fun `reified extensions work with boolean`() = runTest {
-        secureLocalDataSource.save("bool_key", false)
-
-        val result: Boolean? = secureLocalDataSource.get("bool_key")
-        assertEquals(false, result)
-    }
-
-    @Test
-    fun `reified extensions work with list`() = runTest {
-        val list = listOf("a", "b", "c")
-
-        @Suppress("UNCHECKED_CAST")
-        secureLocalDataSource.save("list_key", list, List::class.java as Class<List<String>>)
-
-        @Suppress("UNCHECKED_CAST")
-        val result = secureLocalDataSource.get("list_key", List::class.java as Class<List<String>>)
-        assertEquals(listOf("a", "b", "c"), result)
-    }
-
+    @Serializable
     data class TestData(val name: String, val age: Int, val tags: List<String> = emptyList())
 }

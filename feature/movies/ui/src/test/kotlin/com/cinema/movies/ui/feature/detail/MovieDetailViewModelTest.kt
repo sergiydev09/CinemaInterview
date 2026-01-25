@@ -3,6 +3,8 @@ package com.cinema.movies.ui.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.cinema.core.domain.util.Result
+import com.cinema.core.favorites.domain.repository.FavoritesRepository
+import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.model.MovieDetail
 import com.cinema.movies.domain.usecase.GetMovieDetailUseCase
 import io.mockk.every
@@ -28,6 +30,8 @@ import org.junit.Test
 class MovieDetailViewModelTest {
 
     private lateinit var getMovieDetailUseCase: GetMovieDetailUseCase
+    private lateinit var favoritesRepository: FavoritesRepository
+    private lateinit var toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private val testDispatcher = StandardTestDispatcher()
 
@@ -35,7 +39,10 @@ class MovieDetailViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getMovieDetailUseCase = mockk()
+        favoritesRepository = mockk(relaxed = true)
+        toggleMovieFavoriteUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf(MovieDetailViewModel.ARG_MOVIE_ID to 123))
+        every { favoritesRepository.isMovieFavorite(any()) } returns flowOf(false)
     }
 
     @After
@@ -145,7 +152,12 @@ class MovieDetailViewModelTest {
         verify { getMovieDetailUseCase(0) }
     }
 
-    private fun createViewModel() = MovieDetailViewModel(savedStateHandle, getMovieDetailUseCase)
+    private fun createViewModel() = MovieDetailViewModel(
+        savedStateHandle,
+        getMovieDetailUseCase,
+        favoritesRepository,
+        toggleMovieFavoriteUseCase
+    )
 
     private fun createMovieDetail(id: Int = 123) = MovieDetail(
         id = id,

@@ -4,11 +4,10 @@ import app.cash.turbine.test
 import com.cinema.core.domain.session.SessionManager
 import com.cinema.core.domain.util.Result
 import com.cinema.login.domain.model.ValidationErrorType
-import com.cinema.login.domain.usecase.ClearUsernameUseCase
-import com.cinema.login.domain.usecase.GetSavedUsernameUseCase
+import com.cinema.login.domain.repository.UserPreferencesRepository
 import com.cinema.login.domain.usecase.LoginUseCase
-import com.cinema.login.domain.usecase.SaveUsernameUseCase
 import com.cinema.login.domain.usecase.ValidateCredentialsUseCase
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
@@ -34,9 +33,7 @@ class LoginViewModelTest {
 
     private lateinit var loginUseCase: LoginUseCase
     private lateinit var validateCredentialsUseCase: ValidateCredentialsUseCase
-    private lateinit var getSavedUsernameUseCase: GetSavedUsernameUseCase
-    private lateinit var saveUsernameUseCase: SaveUsernameUseCase
-    private lateinit var clearUsernameUseCase: ClearUsernameUseCase
+    private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var sessionManager: SessionManager
 
     private val testDispatcher = StandardTestDispatcher()
@@ -46,12 +43,10 @@ class LoginViewModelTest {
         Dispatchers.setMain(testDispatcher)
         loginUseCase = mockk()
         validateCredentialsUseCase = mockk()
-        getSavedUsernameUseCase = mockk()
-        saveUsernameUseCase = mockk()
-        clearUsernameUseCase = mockk()
+        userPreferencesRepository = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
 
-        every { getSavedUsernameUseCase() } returns flowOf(Result.Success(null))
+        coEvery { userPreferencesRepository.getSavedUsername() } returns null
     }
 
     @After
@@ -78,7 +73,7 @@ class LoginViewModelTest {
 
     @Test
     fun `loads saved username on init`() = runTest {
-        every { getSavedUsernameUseCase() } returns flowOf(Result.Success("savedUser"))
+        coEvery { userPreferencesRepository.getSavedUsername() } returns "savedUser"
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -183,7 +178,7 @@ class LoginViewModelTest {
     fun `successful login saves username when remember is checked`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns emptyList()
         every { loginUseCase(any(), any()) } returns flowOf(Result.Success("token"))
-        every { saveUsernameUseCase("user") } returns flowOf(Result.Success(Unit))
+        coEvery { userPreferencesRepository.saveUsername("user") } just runs
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
@@ -193,14 +188,14 @@ class LoginViewModelTest {
         viewModel.onLoginClicked()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { saveUsernameUseCase("user") }
+        coVerify { userPreferencesRepository.saveUsername("user") }
     }
 
     @Test
     fun `successful login clears username when remember is not checked`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns emptyList()
         every { loginUseCase(any(), any()) } returns flowOf(Result.Success("token"))
-        every { clearUsernameUseCase() } returns flowOf(Result.Success(Unit))
+        coEvery { userPreferencesRepository.clearUsername() } just runs
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
@@ -210,14 +205,14 @@ class LoginViewModelTest {
         viewModel.onLoginClicked()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { clearUsernameUseCase() }
+        coVerify { userPreferencesRepository.clearUsername() }
     }
 
     @Test
     fun `successful login starts session`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns emptyList()
         every { loginUseCase(any(), any()) } returns flowOf(Result.Success("token123"))
-        every { clearUsernameUseCase() } returns flowOf(Result.Success(Unit))
+        coEvery { userPreferencesRepository.clearUsername() } just runs
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
@@ -233,7 +228,7 @@ class LoginViewModelTest {
     fun `successful login emits NavigateToHome event`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns emptyList()
         every { loginUseCase(any(), any()) } returns flowOf(Result.Success("token"))
-        every { clearUsernameUseCase() } returns flowOf(Result.Success(Unit))
+        coEvery { userPreferencesRepository.clearUsername() } just runs
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
@@ -293,9 +288,7 @@ class LoginViewModelTest {
     private fun createViewModel() = LoginViewModel(
         loginUseCase,
         validateCredentialsUseCase,
-        getSavedUsernameUseCase,
-        saveUsernameUseCase,
-        clearUsernameUseCase,
+        userPreferencesRepository,
         sessionManager
     )
 }
