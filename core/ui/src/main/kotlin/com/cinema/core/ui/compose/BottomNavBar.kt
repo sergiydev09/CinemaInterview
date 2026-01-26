@@ -1,4 +1,4 @@
-package com.cinema.core.ui.navigation
+package com.cinema.core.ui.compose
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme

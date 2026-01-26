@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.cinema.core.domain.session.SessionManager
 import com.cinema.core.ui.R
-import com.cinema.core.ui.navigation.BottomNavBar
-import com.cinema.core.ui.navigation.BottomNavItem
+import com.cinema.core.ui.compose.BottomNavBar
+import com.cinema.core.ui.compose.BottomNavItem
 import com.cinema.core.ui.theme.CinemaTheme
 import com.cinema.home.ui.navigation.HomeRoute
 import com.cinema.interview.navigation.MainNavGraph
