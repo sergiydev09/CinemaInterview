@@ -4,9 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.model.FavoriteMovie
 import com.cinema.core.favorites.domain.repository.FavoritesRepository
 import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
+import com.cinema.movies.domain.mapper.toFavoriteMovie
 import com.cinema.movies.domain.model.MovieDetail
 import com.cinema.movies.domain.usecase.GetMovieDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -71,22 +71,16 @@ class MovieDetailViewModel @Inject constructor(
     }
 
     fun toggleFavorite() {
-        val movie = _uiState.value.movie ?: return
-        viewModelScope.launch {
-            toggleMovieFavoriteUseCase(movie.toFavoriteMovie())
+        _uiState.value.movie?.run {
+            viewModelScope.launch {
+                toggleMovieFavoriteUseCase(toFavoriteMovie())
+            }
         }
     }
 
     fun retry() {
         loadMovieDetail()
     }
-
-    private fun MovieDetail.toFavoriteMovie(): FavoriteMovie = FavoriteMovie(
-        id = id,
-        title = title,
-        posterUrl = posterUrl,
-        releaseDate = releaseDate
-    )
 
     companion object {
         const val ARG_MOVIE_ID = "movieId"

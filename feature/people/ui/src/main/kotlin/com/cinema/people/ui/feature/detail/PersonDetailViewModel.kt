@@ -4,9 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.model.FavoritePerson
 import com.cinema.core.favorites.domain.repository.FavoritesRepository
 import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
+import com.cinema.people.domain.mapper.toFavoritePerson
 import com.cinema.people.domain.model.PersonDetail
 import com.cinema.people.domain.usecase.GetPersonDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -71,21 +71,16 @@ class PersonDetailViewModel @Inject constructor(
     }
 
     fun toggleFavorite() {
-        val person = _uiState.value.person ?: return
-        viewModelScope.launch {
-            togglePersonFavoriteUseCase(person.toFavoritePerson())
+        _uiState.value.person?.run {
+            viewModelScope.launch {
+                togglePersonFavoriteUseCase(toFavoritePerson())
+            }
         }
     }
 
     fun retry() {
         loadPersonDetail()
     }
-
-    private fun PersonDetail.toFavoritePerson(): FavoritePerson = FavoritePerson(
-        id = id,
-        name = name,
-        profileUrl = profileUrl
-    )
 
     companion object {
         const val ARG_PERSON_ID = "personId"
