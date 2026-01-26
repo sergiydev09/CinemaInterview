@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Cinema Interview</string>
-
-    <!-- Navigation -->
-    <string name="nav_home">Home</string>
-    <string name="nav_movies">Movies</string>
-    <string name="nav_people">People</string>
-    <string name="nav_movie_detail">Movie Details</string>
-    <string name="nav_person_detail">Person Details</string>
 </resources>

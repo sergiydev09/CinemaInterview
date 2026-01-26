@@ -7,4 +7,9 @@
     <string name="error_generic">Something went wrong. Please try again.</string>
     <string name="error_network">Network error. Please check your connection.</string>
     <string name="error_icon_description">Error icon</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_movies">Movies</string>
+    <string name="nav_people">People</string>
 </resources>

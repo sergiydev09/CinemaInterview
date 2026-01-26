@@ -1,9 +1,5 @@
-package com.cinema.interview.navigation
+package com.cinema.core.ui.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -18,31 +14,22 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.cinema.home.ui.navigation.HomeRoute
-import com.cinema.interview.R
-import com.cinema.movies.ui.navigation.MoviesRoute
-import com.cinema.people.ui.navigation.PeopleRoute
 
-data class BottomNavItem<T : Any>(
-    val route: T,
+data class BottomNavItem(
+    val route: Any,
     val icon: ImageVector,
     val labelResId: Int
 )
 
-val bottomNavItems = listOf(
-    BottomNavItem(HomeRoute, Icons.Default.Home, R.string.nav_home),
-    BottomNavItem(MoviesRoute, Icons.Default.PlayArrow, R.string.nav_movies),
-    BottomNavItem(PeopleRoute, Icons.Default.Person, R.string.nav_people)
-)
-
 @Composable
 fun BottomNavBar(
-    navController: NavController
+    navController: NavController,
+    items: List<BottomNavItem>
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val showBottomBar = bottomNavItems.any { item ->
+    val showBottomBar = items.any { item ->
         currentDestination?.hasRoute(item.route::class) == true
     }
 
@@ -50,7 +37,7 @@ fun BottomNavBar(
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.surface
         ) {
-            bottomNavItems.forEach { item ->
+            items.forEach { item ->
                 val selected = currentDestination?.hasRoute(item.route::class) == true
 
                 NavigationBarItem(

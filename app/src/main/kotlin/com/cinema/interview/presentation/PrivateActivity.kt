@@ -9,14 +9,23 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.cinema.core.domain.session.SessionManager
+import com.cinema.core.ui.R
+import com.cinema.core.ui.navigation.BottomNavBar
+import com.cinema.core.ui.navigation.BottomNavItem
 import com.cinema.core.ui.theme.CinemaTheme
-import com.cinema.interview.navigation.BottomNavBar
+import com.cinema.home.ui.navigation.HomeRoute
 import com.cinema.interview.navigation.MainNavGraph
 import com.cinema.interview.navigation.SessionNavigator
+import com.cinema.movies.ui.navigation.MoviesRoute
+import com.cinema.people.ui.navigation.PeopleRoute
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -45,7 +54,15 @@ class PrivateActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    bottomBar = { BottomNavBar(navController) }
+                    bottomBar = {
+                        BottomNavBar(
+                            navController, items = listOf(
+                                BottomNavItem(HomeRoute, Icons.Default.Home, R.string.nav_home),
+                                BottomNavItem(MoviesRoute, Icons.Default.PlayArrow, R.string.nav_movies),
+                                BottomNavItem(PeopleRoute, Icons.Default.Person, R.string.nav_people)
+                            )
+                        )
+                    }
                 ) { paddingValues ->
                     MainNavGraph(
                         navController = navController,

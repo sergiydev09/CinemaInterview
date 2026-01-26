@@ -11,7 +11,7 @@ This project follows **Clean Architecture** principles with a modular approach:
 ```
 CinemaInterview/
 ├── app/                    # Application module
-│   └── navigation/        # Main NavGraph, BottomNavBar, SessionNavigator
+│   └── navigation/        # Main NavGraph, SessionNavigator
 ├── core/
 │   ├── data/              # Networking, session, security, image URL utilities
 │   ├── domain/            # Result wrapper, Flow extensions, SessionManager
@@ -22,7 +22,7 @@ CinemaInterview/
 │   └── ui/                # Compose components, theme, navigation utilities
 │       ├── compose/       # Reusable composables (LoadingContent, ErrorContent, etc.)
 │       ├── theme/         # Material 3 theme (colors, typography, shapes)
-│       └── navigation/    # DeeplinkScheme utilities
+│       └── navigation/    # DeeplinkScheme, BottomNavBar
 └── feature/
     ├── home/
     │   └── ui/            # HomeScreen with favorites display
@@ -32,11 +32,11 @@ CinemaInterview/
     │   └── ui/            # Screens, ViewModels, views
     ├── movies/
     │   ├── data/
-    │   ├── domain/
+    │   ├── domain/        # Models, use cases, FavoriteMovie mapper
     │   └── ui/            # MoviesScreen, MovieDetailScreen
     └── people/
         ├── data/
-        ├── domain/
+        ├── domain/        # Models, use cases, FavoritePerson mapper
         └── ui/            # PeopleScreen, PersonDetailScreen
 ```
 
@@ -202,15 +202,16 @@ Using **Hilt** for dependency injection:
 
 Reusable composables in `core/ui/compose/`:
 
-| Component              | Description                                          |
-|------------------------|------------------------------------------------------|
-| `LoadingContent`       | Centered loading spinner with optional message       |
-| `ErrorContent`         | Error display with warning icon and retry button     |
-| `LoadingButton`        | Button with loading state and spinner                |
-| `CinemaAsyncImage`     | Coil 3 AsyncImage wrapper for image loading          |
-| `CollapsingHeaderLayout`| Custom layout with collapsing header animation      |
-| `InlineError`          | Inline error messages for forms                      |
-| `TimeWindowToggle`     | Day/Week toggle for trending filters                 |
+| Component                | Description                                      |
+|--------------------------|--------------------------------------------------|
+| `LoadingContent`         | Centered loading spinner with optional message   |
+| `ErrorContent`           | Error display with warning icon and retry button |
+| `LoadingButton`          | Button with loading state and spinner            |
+| `CinemaAsyncImage`       | Coil 3 AsyncImage wrapper for image loading      |
+| `CollapsingHeaderLayout` | Custom layout with collapsing header animation   |
+| `InlineError`            | Inline error messages for forms                  |
+| `TimeWindowToggle`       | Day/Week toggle for trending filters             |
+| `BottomNavBar`           | Reusable bottom navigation bar component         |
 
 ### Theme
 
