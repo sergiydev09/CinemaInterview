@@ -4,15 +4,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TrendingMoviesResponse(
+data class TrendingMoviesDto(
     @SerialName("page") val page: Int,
-    @SerialName("results") val results: List<MovieDto>,
+    @SerialName("results") val results: List<MovieDTO>,
     @SerialName("total_pages") val totalPages: Int,
     @SerialName("total_results") val totalResults: Int
 )
 
 @Serializable
-data class MovieDto(
+data class MovieDTO(
     @SerialName("id") val id: Int,
     @SerialName("title") val title: String,
     @SerialName("overview") val overview: String,

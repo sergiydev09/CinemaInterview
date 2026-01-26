@@ -4,7 +4,6 @@ import android.util.Log
 import com.cinema.core.data.BuildConfig
 import com.cinema.core.data.di.SessionScope
 import com.cinema.core.data.network.AuthInterceptor
-import com.cinema.core.domain.session.SessionCallback
 import com.cinema.core.domain.session.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +40,7 @@ class SessionManagerImpl @Inject constructor(
         }
     }
 
-    private var sessionCallback: SessionCallback? = null
+    private var onSessionExpired: (() -> Unit)? = null
     private var sessionJob: Job? = null
     private var lastResetTime = 0L
 
@@ -62,8 +61,8 @@ class SessionManagerImpl @Inject constructor(
         return authInterceptor.hasToken()
     }
 
-    override fun setSessionCallback(callback: SessionCallback?) {
-        sessionCallback = callback
+    override fun setOnSessionExpired(callback: (() -> Unit)?) {
+        onSessionExpired = callback
     }
 
     override fun resetInactivityTimer() {
@@ -91,7 +90,7 @@ class SessionManagerImpl @Inject constructor(
             }
             logDebug("Session expired due to inactivity")
             withContext(Dispatchers.Main) {
-                sessionCallback?.onSessionExpired()
+                onSessionExpired?.invoke()
             }
         }
     }

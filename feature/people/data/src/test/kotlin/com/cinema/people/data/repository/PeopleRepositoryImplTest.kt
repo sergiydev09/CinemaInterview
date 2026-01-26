@@ -1,8 +1,8 @@
 package com.cinema.people.data.repository
 
 import com.cinema.people.data.datasource.PeopleRemoteDataSource
-import com.cinema.people.data.network.model.PersonDetailResponse
-import com.cinema.people.data.network.model.PersonDto
+import com.cinema.people.data.network.model.PersonDTO
+import com.cinema.people.data.network.model.PersonDetailDTO
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -71,7 +71,7 @@ class PeopleRepositoryImplTest {
         repository.getPersonDetail(123)
     }
 
-    private fun createPersonDto(id: Int, name: String = "Person $id") = PersonDto(
+    private fun createPersonDto(id: Int, name: String = "Person $id") = PersonDTO(
         id = id,
         name = name,
         profilePath = "/profile.jpg",
@@ -82,7 +82,7 @@ class PeopleRepositoryImplTest {
         knownFor = emptyList()
     )
 
-    private fun createPersonDetailResponse() = PersonDetailResponse(
+    private fun createPersonDetailResponse() = PersonDetailDTO(
         id = 123,
         name = "John Doe",
         biography = "Biography",

@@ -2,7 +2,6 @@ package com.cinema.core.data.session
 
 import android.util.Log
 import com.cinema.core.data.network.AuthInterceptor
-import com.cinema.core.domain.session.SessionCallback
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -99,9 +98,9 @@ class SessionManagerImplTest {
     @Test
     fun `logout cancels session timer`() = runTest {
         every { authInterceptor.hasToken() } returns true
-        val callback = mockk<SessionCallback>(relaxed = true)
+        var sessionExpiredCalled = false
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
-        sessionManager.setSessionCallback(callback)
+        sessionManager.setOnSessionExpired { sessionExpiredCalled = true }
 
         sessionManager.startSession("token")
         sessionManager.logout()
@@ -110,7 +109,7 @@ class SessionManagerImplTest {
         advanceTimeBy(4 * 60 * 1000L)
         advanceUntilIdle()
 
-        verify(exactly = 0) { callback.onSessionExpired() }
+        assertFalse(sessionExpiredCalled)
     }
 
     // ==================== isSessionActive tests ====================
@@ -131,25 +130,23 @@ class SessionManagerImplTest {
         assertFalse(sessionManager.isSessionActive())
     }
 
-    // ==================== setSessionCallback tests ====================
+    // ==================== setOnSessionExpired tests ====================
 
     @Test
-    fun `setSessionCallback sets callback`() = runTest {
-        val callback = mockk<SessionCallback>()
+    fun `setOnSessionExpired sets callback`() = runTest {
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
 
-        sessionManager.setSessionCallback(callback)
-        sessionManager.setSessionCallback(null)
+        sessionManager.setOnSessionExpired { }
+        sessionManager.setOnSessionExpired(null)
         // No exception should be thrown
     }
 
     @Test
-    fun `setSessionCallback with null clears callback`() = runTest {
-        val callback = mockk<SessionCallback>(relaxed = true)
+    fun `setOnSessionExpired with null clears callback`() = runTest {
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
 
-        sessionManager.setSessionCallback(callback)
-        sessionManager.setSessionCallback(null)
+        sessionManager.setOnSessionExpired { }
+        sessionManager.setOnSessionExpired(null)
         // No exception should be thrown
     }
 
@@ -200,9 +197,9 @@ class SessionManagerImplTest {
     @Test
     fun `session expires after timeout and calls callback`() = runTest {
         every { authInterceptor.hasToken() } returns true
-        val callback = mockk<SessionCallback>(relaxed = true)
+        var sessionExpiredCalled = false
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
-        sessionManager.setSessionCallback(callback)
+        sessionManager.setOnSessionExpired { sessionExpiredCalled = true }
 
         sessionManager.startSession("token")
 
@@ -210,22 +207,22 @@ class SessionManagerImplTest {
         advanceTimeBy(3 * 60 * 1000L + 1000L)
         advanceUntilIdle()
 
-        verify { callback.onSessionExpired() }
+        assertTrue(sessionExpiredCalled)
     }
 
     @Test
     fun `session does not expire before timeout`() = runTest {
         every { authInterceptor.hasToken() } returns true
-        val callback = mockk<SessionCallback>(relaxed = true)
+        var sessionExpiredCalled = false
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
-        sessionManager.setSessionCallback(callback)
+        sessionManager.setOnSessionExpired { sessionExpiredCalled = true }
 
         sessionManager.startSession("token")
 
         // Advance time but not past timeout (only 2 minutes)
         advanceTimeBy(2 * 60 * 1000L)
 
-        verify(exactly = 0) { callback.onSessionExpired() }
+        assertFalse(sessionExpiredCalled)
     }
 
     @Test
@@ -246,9 +243,9 @@ class SessionManagerImplTest {
     @Test
     fun `new session cancels previous timer`() = runTest {
         every { authInterceptor.hasToken() } returns true
-        val callback = mockk<SessionCallback>(relaxed = true)
+        var expireCount = 0
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
-        sessionManager.setSessionCallback(callback)
+        sessionManager.setOnSessionExpired { expireCount++ }
 
         sessionManager.startSession("token1")
 
@@ -262,21 +259,21 @@ class SessionManagerImplTest {
         advanceTimeBy(2 * 60 * 1000L)
 
         // Session should NOT have expired yet (need 3 minutes from second session)
-        verify(exactly = 0) { callback.onSessionExpired() }
+        assertTrue(expireCount == 0)
 
         // Advance 2 more minutes (now 4 minutes from second session)
         advanceTimeBy(2 * 60 * 1000L)
         advanceUntilIdle()
 
         // Now it should expire
-        verify { callback.onSessionExpired() }
+        assertTrue(expireCount == 1)
     }
 
     @Test
     fun `callback is not called if null when session expires`() = runTest {
         every { authInterceptor.hasToken() } returns true
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
-        sessionManager.setSessionCallback(null)
+        sessionManager.setOnSessionExpired(null)
 
         sessionManager.startSession("token")
 
@@ -290,9 +287,9 @@ class SessionManagerImplTest {
     @Test
     fun `resetInactivityTimer extends session timeout`() = runTest {
         every { authInterceptor.hasToken() } returns true
-        val callback = mockk<SessionCallback>(relaxed = true)
+        var expireCount = 0
         val sessionManager = SessionManagerImpl(authInterceptor, scope = this)
-        sessionManager.setSessionCallback(callback)
+        sessionManager.setOnSessionExpired { expireCount++ }
 
         sessionManager.startSession("token")
 
@@ -307,13 +304,13 @@ class SessionManagerImplTest {
         advanceTimeBy(2 * 60 * 1000L)
 
         // Session should NOT have expired yet
-        verify(exactly = 0) { callback.onSessionExpired() }
+        assertTrue(expireCount == 0)
 
         // Advance past timeout from reset
         advanceTimeBy(2 * 60 * 1000L)
         advanceUntilIdle()
 
         // Now it should expire
-        verify { callback.onSessionExpired() }
+        assertTrue(expireCount == 1)
     }
 }

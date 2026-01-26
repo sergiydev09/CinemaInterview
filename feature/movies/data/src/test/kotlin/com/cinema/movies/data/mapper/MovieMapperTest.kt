@@ -2,10 +2,10 @@ package com.cinema.movies.data.mapper
 
 import com.cinema.movies.data.mapper.MovieMapper.toDomain
 import com.cinema.movies.data.mapper.MovieMapper.toDomainList
-import com.cinema.movies.data.network.model.GenreDto
-import com.cinema.movies.data.network.model.MovieDetailResponse
-import com.cinema.movies.data.network.model.MovieDto
-import com.cinema.movies.data.network.model.ProductionCompanyDto
+import com.cinema.movies.data.network.model.GenreDTO
+import com.cinema.movies.data.network.model.MovieDTO
+import com.cinema.movies.data.network.model.MovieDetailDTO
+import com.cinema.movies.data.network.model.ProductionCompanyDTO
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -74,7 +74,7 @@ class MovieMapperTest {
 
     @Test
     fun `empty list toDomainList returns empty list`() {
-        val dtos = emptyList<MovieDto>()
+        val dtos = emptyList<MovieDTO>()
 
         val movies = dtos.toDomainList()
 
@@ -121,7 +121,7 @@ class MovieMapperTest {
 
     @Test
     fun `GenreDto toDomain maps correctly`() {
-        val dto = GenreDto(id = 28, name = "Action")
+        val dto = GenreDTO(id = 28, name = "Action")
 
         val genre = dto.toDomain()
 
@@ -135,7 +135,7 @@ class MovieMapperTest {
         posterPath: String? = "/poster.jpg",
         backdropPath: String? = "/backdrop.jpg",
         releaseDate: String? = "2024-01-15"
-    ) = MovieDto(
+    ) = MovieDTO(
         id = id,
         title = title,
         overview = "Test overview",
@@ -152,15 +152,15 @@ class MovieMapperTest {
     )
 
     private fun createMovieDetailResponse(
-        genres: List<GenreDto>? = listOf(
-            GenreDto(28, "Action"),
-            GenreDto(12, "Adventure")
+        genres: List<GenreDTO>? = listOf(
+            GenreDTO(28, "Action"),
+            GenreDTO(12, "Adventure")
         ),
-        productionCompanies: List<ProductionCompanyDto>? = listOf(
-            ProductionCompanyDto(1, "Company A", null, "US"),
-            ProductionCompanyDto(2, "Company B", null, "UK")
+        productionCompanies: List<ProductionCompanyDTO>? = listOf(
+            ProductionCompanyDTO(1, "Company A", null, "US"),
+            ProductionCompanyDTO(2, "Company B", null, "UK")
         )
-    ) = MovieDetailResponse(
+    ) = MovieDetailDTO(
         id = 1,
         title = "Test Movie",
         overview = "Test overview",

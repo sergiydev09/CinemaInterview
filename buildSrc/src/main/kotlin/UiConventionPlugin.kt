@@ -6,7 +6,6 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
-import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 
 class UiConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -35,10 +34,6 @@ class UiConventionPlugin : Plugin<Project> {
                 buildFeatures {
                     compose = true
                 }
-            }
-
-            extensions.configure<ComposeCompilerGradlePluginExtension> {
-                enableStrongSkippingMode.set(true)
             }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")

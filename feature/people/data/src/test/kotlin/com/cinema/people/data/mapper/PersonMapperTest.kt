@@ -2,9 +2,9 @@ package com.cinema.people.data.mapper
 
 import com.cinema.people.data.mapper.PersonMapper.toDomain
 import com.cinema.people.data.mapper.PersonMapper.toDomainList
-import com.cinema.people.data.network.model.KnownForDto
-import com.cinema.people.data.network.model.PersonDetailResponse
-import com.cinema.people.data.network.model.PersonDto
+import com.cinema.people.data.network.model.KnownForDTO
+import com.cinema.people.data.network.model.PersonDTO
+import com.cinema.people.data.network.model.PersonDetailDTO
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -69,7 +69,7 @@ class PersonMapperTest {
 
     @Test
     fun `empty list toDomainList returns empty list`() {
-        val dtos = emptyList<PersonDto>()
+        val dtos = emptyList<PersonDTO>()
 
         val people = dtos.toDomainList()
 
@@ -113,7 +113,7 @@ class PersonMapperTest {
 
     @Test
     fun `KnownForDto toDomain uses title when available`() {
-        val dto = KnownForDto(
+        val dto = KnownForDTO(
             id = 1,
             title = "Movie Title",
             name = "TV Name",
@@ -130,7 +130,7 @@ class PersonMapperTest {
 
     @Test
     fun `KnownForDto toDomain uses name when title is null`() {
-        val dto = KnownForDto(
+        val dto = KnownForDTO(
             id = 1,
             title = null,
             name = "TV Name",
@@ -147,7 +147,7 @@ class PersonMapperTest {
 
     @Test
     fun `KnownForDto toDomain uses Unknown when both title and name are null`() {
-        val dto = KnownForDto(
+        val dto = KnownForDTO(
             id = 1,
             title = null,
             name = null,
@@ -167,11 +167,11 @@ class PersonMapperTest {
         name: String = "John Doe",
         profilePath: String? = "/profile.jpg",
         knownForDepartment: String? = "Acting",
-        knownFor: List<KnownForDto>? = listOf(
-            KnownForDto(1, "Movie 1", null, "movie", "/poster1.jpg", "Overview", 8.0),
-            KnownForDto(2, "Movie 2", null, "movie", "/poster2.jpg", "Overview", 7.5)
+        knownFor: List<KnownForDTO>? = listOf(
+            KnownForDTO(1, "Movie 1", null, "movie", "/poster1.jpg", "Overview", 8.0),
+            KnownForDTO(2, "Movie 2", null, "movie", "/poster2.jpg", "Overview", 7.5)
         )
-    ) = PersonDto(
+    ) = PersonDTO(
         id = id,
         name = name,
         profilePath = profilePath,
@@ -185,7 +185,7 @@ class PersonMapperTest {
     private fun createPersonDetailResponse(
         biography: String? = "Biography text",
         alsoKnownAs: List<String>? = listOf("Johnny", "J.D.")
-    ) = PersonDetailResponse(
+    ) = PersonDetailDTO(
         id = 1,
         name = "John Doe",
         biography = biography,

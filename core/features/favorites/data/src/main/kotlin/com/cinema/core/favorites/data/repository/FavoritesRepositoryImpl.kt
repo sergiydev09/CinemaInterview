@@ -10,6 +10,7 @@ import com.cinema.core.favorites.data.model.FavoritePersonEntity
 import com.cinema.core.favorites.domain.model.FavoriteMovie
 import com.cinema.core.favorites.domain.model.FavoritePerson
 import com.cinema.core.favorites.domain.repository.FavoritesRepository
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,6 +28,7 @@ class FavoritesRepositoryImpl @Inject constructor(
 ) : FavoritesRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val initCompleted = CompletableDeferred<Unit>()
 
     private val _favoriteMovies = MutableStateFlow<Map<Int, FavoriteMovieEntity>>(emptyMap())
     private val _favoritePeople = MutableStateFlow<Map<Int, FavoritePersonEntity>>(emptyMap())
@@ -35,6 +37,7 @@ class FavoritesRepositoryImpl @Inject constructor(
         scope.launch {
             _favoriteMovies.value = secureLocalDataSource.get<Map<Int, FavoriteMovieEntity>>(KEY_FAVORITE_MOVIES) ?: emptyMap()
             _favoritePeople.value = secureLocalDataSource.get<Map<Int, FavoritePersonEntity>>(KEY_FAVORITE_PEOPLE) ?: emptyMap()
+            initCompleted.complete(Unit)
         }
     }
 
@@ -51,21 +54,25 @@ class FavoritesRepositoryImpl @Inject constructor(
         _favoritePeople.map { it.containsKey(personId) }
 
     override suspend fun addFavoriteMovie(movie: FavoriteMovie) {
+        initCompleted.await()
         _favoriteMovies.update { map -> map + (movie.id to movie.toEntity()) }
         persistMovies()
     }
 
     override suspend fun removeFavoriteMovie(movieId: Int) {
+        initCompleted.await()
         _favoriteMovies.update { map -> map - movieId }
         persistMovies()
     }
 
     override suspend fun addFavoritePerson(person: FavoritePerson) {
+        initCompleted.await()
         _favoritePeople.update { map -> map + (person.id to person.toEntity()) }
         persistPeople()
     }
 
     override suspend fun removeFavoritePerson(personId: Int) {
+        initCompleted.await()
         _favoritePeople.update { map -> map - personId }
         persistPeople()
     }

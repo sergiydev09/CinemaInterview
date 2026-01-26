@@ -1,9 +1,9 @@
 package com.cinema.movies.data.datasource
 
 import com.cinema.movies.data.network.MoviesApiService
-import com.cinema.movies.data.network.model.MovieDetailResponse
-import com.cinema.movies.data.network.model.MovieDto
-import com.cinema.movies.data.network.model.TrendingMoviesResponse
+import com.cinema.movies.data.network.model.MovieDTO
+import com.cinema.movies.data.network.model.MovieDetailDTO
+import com.cinema.movies.data.network.model.TrendingMoviesDto
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -26,7 +26,7 @@ class MoviesRemoteDataSourceTest {
     @Test
     fun `getTrendingMovies returns movies from api`() = runTest {
         val expectedMovies = listOf(createMovieDto(1), createMovieDto(2))
-        val response = TrendingMoviesResponse(
+        val response = TrendingMoviesDto(
             page = 1,
             results = expectedMovies,
             totalPages = 1,
@@ -42,7 +42,7 @@ class MoviesRemoteDataSourceTest {
 
     @Test
     fun `getTrendingMovies passes timeWindow to api`() = runTest {
-        val response = TrendingMoviesResponse(
+        val response = TrendingMoviesDto(
             page = 1,
             results = emptyList(),
             totalPages = 0,
@@ -80,7 +80,7 @@ class MoviesRemoteDataSourceTest {
         dataSource.getMovieDetail(123)
     }
 
-    private fun createMovieDto(id: Int) = MovieDto(
+    private fun createMovieDto(id: Int) = MovieDTO(
         id = id,
         title = "Movie $id",
         overview = "Overview",
@@ -96,7 +96,7 @@ class MoviesRemoteDataSourceTest {
         genreIds = listOf(28)
     )
 
-    private fun createMovieDetailResponse() = MovieDetailResponse(
+    private fun createMovieDetailResponse() = MovieDetailDTO(
         id = 123,
         title = "Test Movie",
         overview = "Overview",

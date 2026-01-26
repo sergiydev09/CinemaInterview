@@ -1,9 +1,9 @@
 package com.cinema.people.data.datasource
 
 import com.cinema.people.data.network.PeopleApiService
-import com.cinema.people.data.network.model.PersonDetailResponse
-import com.cinema.people.data.network.model.PersonDto
-import com.cinema.people.data.network.model.TrendingPeopleResponse
+import com.cinema.people.data.network.model.PersonDTO
+import com.cinema.people.data.network.model.PersonDetailDTO
+import com.cinema.people.data.network.model.TrendingPeopleDTO
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -26,7 +26,7 @@ class PeopleRemoteDataSourceTest {
     @Test
     fun `getTrendingPeople returns people from api`() = runTest {
         val expectedPeople = listOf(createPersonDto(1), createPersonDto(2))
-        val response = TrendingPeopleResponse(
+        val response = TrendingPeopleDTO(
             page = 1,
             results = expectedPeople,
             totalPages = 1,
@@ -42,7 +42,7 @@ class PeopleRemoteDataSourceTest {
 
     @Test
     fun `getTrendingPeople passes timeWindow to api`() = runTest {
-        val response = TrendingPeopleResponse(
+        val response = TrendingPeopleDTO(
             page = 1,
             results = emptyList(),
             totalPages = 0,
@@ -80,7 +80,7 @@ class PeopleRemoteDataSourceTest {
         dataSource.getPersonDetail(123)
     }
 
-    private fun createPersonDto(id: Int) = PersonDto(
+    private fun createPersonDto(id: Int) = PersonDTO(
         id = id,
         name = "Person $id",
         profilePath = "/profile.jpg",
@@ -91,7 +91,7 @@ class PeopleRemoteDataSourceTest {
         knownFor = emptyList()
     )
 
-    private fun createPersonDetailResponse() = PersonDetailResponse(
+    private fun createPersonDetailResponse() = PersonDetailDTO(
         id = 123,
         name = "John Doe",
         biography = "Biography",

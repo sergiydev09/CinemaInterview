@@ -1,8 +1,8 @@
 package com.cinema.movies.data.repository
 
 import com.cinema.movies.data.datasource.MoviesRemoteDataSource
-import com.cinema.movies.data.network.model.MovieDetailResponse
-import com.cinema.movies.data.network.model.MovieDto
+import com.cinema.movies.data.network.model.MovieDTO
+import com.cinema.movies.data.network.model.MovieDetailDTO
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -71,7 +71,7 @@ class MoviesRepositoryImplTest {
         repository.getMovieDetail(123)
     }
 
-    private fun createMovieDto(id: Int, title: String = "Movie $id") = MovieDto(
+    private fun createMovieDto(id: Int, title: String = "Movie $id") = MovieDTO(
         id = id,
         title = title,
         overview = "Overview",
@@ -87,7 +87,7 @@ class MoviesRepositoryImplTest {
         genreIds = listOf(28)
     )
 
-    private fun createMovieDetailResponse() = MovieDetailResponse(
+    private fun createMovieDetailResponse() = MovieDetailDTO(
         id = 123,
         title = "Test Movie",
         overview = "Overview",

@@ -1,16 +1,16 @@
 package com.cinema.movies.data.mapper
 
 import com.cinema.core.data.util.ImageUrlBuilder
-import com.cinema.movies.data.network.model.GenreDto
-import com.cinema.movies.data.network.model.MovieDetailResponse
-import com.cinema.movies.data.network.model.MovieDto
+import com.cinema.movies.data.network.model.GenreDTO
+import com.cinema.movies.data.network.model.MovieDTO
+import com.cinema.movies.data.network.model.MovieDetailDTO
 import com.cinema.movies.domain.model.Genre
 import com.cinema.movies.domain.model.Movie
 import com.cinema.movies.domain.model.MovieDetail
 
 object MovieMapper {
 
-    fun MovieDto.toDomain(): Movie {
+    fun MovieDTO.toDomain(): Movie {
         return Movie(
             id = id,
             title = title,
@@ -24,7 +24,7 @@ object MovieMapper {
         )
     }
 
-    fun MovieDetailResponse.toDomain(): MovieDetail {
+    fun MovieDetailDTO.toDomain(): MovieDetail {
         return MovieDetail(
             id = id,
             title = title,
@@ -45,11 +45,11 @@ object MovieMapper {
         )
     }
 
-    fun GenreDto.toDomain(): Genre {
+    fun GenreDTO.toDomain(): Genre {
         return Genre(id = id, name = name)
     }
 
-    fun List<MovieDto>.toDomainList(): List<Movie> {
+    fun List<MovieDTO>.toDomainList(): List<Movie> {
         return map { it.toDomain() }
     }
 }

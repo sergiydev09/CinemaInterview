@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.cinema.core.domain.session.SessionCallback
 import com.cinema.core.domain.session.SessionManager
 import com.cinema.core.ui.theme.CinemaTheme
 import com.cinema.interview.navigation.BottomNavBar
@@ -22,7 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PrivateActivity : ComponentActivity(), SessionCallback {
+class PrivateActivity : ComponentActivity() {
 
     @Inject lateinit var sessionManager: SessionManager
     @Inject lateinit var sessionNavigator: SessionNavigator
@@ -58,19 +57,15 @@ class PrivateActivity : ComponentActivity(), SessionCallback {
     }
 
     private fun setupSessionManager() {
-        sessionManager.setSessionCallback(this)
+        sessionManager.setOnSessionExpired {
+            sessionManager.logout()
+            navigateToLogin()
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         sessionManager.resetInactivityTimer()
         return super.dispatchTouchEvent(ev)
-    }
-
-    override fun onSessionExpired() {
-        runOnUiThread {
-            sessionManager.logout()
-            navigateToLogin()
-        }
     }
 
     private fun navigateToLogin() {
@@ -79,6 +74,6 @@ class PrivateActivity : ComponentActivity(), SessionCallback {
 
     override fun onDestroy() {
         super.onDestroy()
-        sessionManager.setSessionCallback(null)
+        sessionManager.setOnSessionExpired(null)
     }
 }

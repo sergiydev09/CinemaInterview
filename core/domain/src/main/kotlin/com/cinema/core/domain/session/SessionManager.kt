@@ -1,16 +1,6 @@
 package com.cinema.core.domain.session
 
 /**
- * Callback interface for session-related events.
- */
-interface SessionCallback {
-    /**
-     * Called when the session has expired.
-     */
-    fun onSessionExpired()
-}
-
-/**
  * Interface for managing user session and authentication state.
  */
 interface SessionManager {
@@ -32,10 +22,10 @@ interface SessionManager {
     fun isSessionActive(): Boolean
 
     /**
-     * Sets the callback for session events.
-     * @param callback The callback to be notified of session events
+     * Sets the callback for when session expires.
+     * @param callback The callback to be notified when session expires, or null to clear
      */
-    fun setSessionCallback(callback: SessionCallback?)
+    fun setOnSessionExpired(callback: (() -> Unit)?)
 
     /**
      * Resets the inactivity timer. Call this when user interacts with the app.

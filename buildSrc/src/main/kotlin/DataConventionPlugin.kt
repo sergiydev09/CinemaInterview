@@ -37,8 +37,8 @@ class DataConventionPlugin : Plugin<Project> {
                     targetCompatibility = JavaVersion.VERSION_17
                 }
 
-                @Suppress("UnstableApiUsage")
                 testOptions {
+                    unitTests.isReturnDefaultValues = true
                     unitTests.all {
                         it.extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
                             isIncludeNoLocationClasses = true
@@ -75,7 +75,8 @@ class DataConventionPlugin : Plugin<Project> {
                         "**/hilt_aggregated_deps/**"
                     )
 
-                    val debugTree = fileTree("$buildDir/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug") {
+                    val buildDirectory = layout.buildDirectory.asFile.get()
+                    val debugTree = fileTree("$buildDirectory/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug") {
                         exclude(fileFilter)
                     }
 
@@ -83,7 +84,7 @@ class DataConventionPlugin : Plugin<Project> {
 
                     sourceDirectories.setFrom(files(mainSrc))
                     classDirectories.setFrom(files(debugTree))
-                    executionData.setFrom(fileTree(buildDir) {
+                    executionData.setFrom(fileTree(buildDirectory) {
                         include("jacoco/testDebugUnitTest.exec")
                     })
                 }
