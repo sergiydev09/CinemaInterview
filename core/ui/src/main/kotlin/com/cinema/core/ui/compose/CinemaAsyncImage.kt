@@ -10,9 +10,9 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun CinemaAsyncImage(
+    modifier: Modifier = Modifier,
     imageUrl: String?,
     contentDescription: String?,
-    modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
 ) {
     if (imageUrl != null) {

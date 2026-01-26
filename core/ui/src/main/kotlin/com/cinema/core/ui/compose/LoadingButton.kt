@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoadingButton(
+    modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false
 ) {

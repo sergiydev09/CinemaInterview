@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun InlineError(
-    message: String,
     modifier: Modifier = Modifier,
+    message: String,
     title: String? = null
 ) {
     Card(

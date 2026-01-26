@@ -13,9 +13,9 @@ import com.cinema.core.domain.model.TimeWindow
 
 @Composable
 fun TimeWindowToggle(
+    modifier: Modifier = Modifier,
     selectedTimeWindow: TimeWindow,
     onTimeWindowSelected: (TimeWindow) -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier) {
         FilterChip(

@@ -34,12 +34,12 @@ import com.cinema.core.ui.R
 
 @Composable
 fun CollapsingHeaderLayout(
+    modifier: Modifier = Modifier,
     onBackClick: () -> Unit,
     expandedHeaderHeight: Dp = 220.dp,
     collapsedHeaderHeight: Dp = 56.dp,
     header: @Composable (progress: Float) -> Unit,
     content: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
     actions: @Composable () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()

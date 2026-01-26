@@ -21,9 +21,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ErrorContent(
+    modifier: Modifier = Modifier,
     message: String,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
