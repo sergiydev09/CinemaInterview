@@ -6,12 +6,14 @@ import com.cinema.core.domain.util.Result
 import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.model.Movie
 import com.cinema.movies.domain.usecase.GetTrendingMoviesUseCase
+import com.cinema.movies.ui.ai.MoviesAIIntentHandler
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -30,6 +32,7 @@ class MoviesViewModelTest {
 
     private lateinit var getTrendingMoviesUseCase: GetTrendingMoviesUseCase
     private lateinit var toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
+    private lateinit var moviesAIIntentHandler: MoviesAIIntentHandler
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -37,6 +40,9 @@ class MoviesViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getTrendingMoviesUseCase = mockk()
         toggleMovieFavoriteUseCase = mockk(relaxed = true)
+        moviesAIIntentHandler = mockk(relaxed = true) {
+            every { intents } returns emptyFlow()
+        }
     }
 
     @After
@@ -112,14 +118,14 @@ class MoviesViewModelTest {
     }
 
     @Test
-    fun `onTimeWindowChanged updates state and reloads`() = runTest {
+    fun `ChangeTimeWindow updates state and reloads`() = runTest {
         every { getTrendingMoviesUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
         every { getTrendingMoviesUseCase(TimeWindow.WEEK) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onTimeWindowChanged(TimeWindow.WEEK)
+        viewModel.handleIntent(MoviesIntent.ChangeTimeWindow(TimeWindow.WEEK))
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -132,13 +138,13 @@ class MoviesViewModelTest {
     }
 
     @Test
-    fun `onTimeWindowChanged does nothing if same timeWindow`() = runTest {
+    fun `ChangeTimeWindow does nothing if same timeWindow`() = runTest {
         every { getTrendingMoviesUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onTimeWindowChanged(TimeWindow.DAY)
+        viewModel.handleIntent(MoviesIntent.ChangeTimeWindow(TimeWindow.DAY))
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Should only be called once (from init)
@@ -146,33 +152,37 @@ class MoviesViewModelTest {
     }
 
     @Test
-    fun `retry reloads movies`() = runTest {
+    fun `Retry reloads movies`() = runTest {
         every { getTrendingMoviesUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.retry()
+        viewModel.handleIntent(MoviesIntent.Retry)
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 2) { getTrendingMoviesUseCase(TimeWindow.DAY) }
     }
 
     @Test
-    fun `toggleFavorite calls use case`() = runTest {
+    fun `ToggleFavorite calls use case`() = runTest {
         every { getTrendingMoviesUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
         val movie = createMovie(1)
-        viewModel.toggleFavorite(movie)
+        viewModel.handleIntent(MoviesIntent.ToggleFavorite(movie))
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { toggleMovieFavoriteUseCase(any()) }
     }
 
-    private fun createViewModel() = MoviesViewModel(getTrendingMoviesUseCase, toggleMovieFavoriteUseCase)
+    private fun createViewModel() = MoviesViewModel(
+        getTrendingMoviesUseCase,
+        toggleMovieFavoriteUseCase,
+        moviesAIIntentHandler
+    )
 
     private fun createMovie(id: Int) = Movie(
         id = id,

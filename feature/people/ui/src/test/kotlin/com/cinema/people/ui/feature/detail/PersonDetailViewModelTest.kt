@@ -7,11 +7,13 @@ import com.cinema.core.favorites.domain.repository.FavoritesRepository
 import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.PersonDetail
 import com.cinema.people.domain.usecase.GetPersonDetailUseCase
+import com.cinema.people.ui.ai.PeopleAIIntentHandler
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -32,6 +34,7 @@ class PersonDetailViewModelTest {
     private lateinit var getPersonDetailUseCase: GetPersonDetailUseCase
     private lateinit var favoritesRepository: FavoritesRepository
     private lateinit var togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
+    private lateinit var peopleAIIntentHandler: PeopleAIIntentHandler
     private lateinit var savedStateHandle: SavedStateHandle
     private val testDispatcher = StandardTestDispatcher()
 
@@ -41,6 +44,9 @@ class PersonDetailViewModelTest {
         getPersonDetailUseCase = mockk()
         favoritesRepository = mockk(relaxed = true)
         togglePersonFavoriteUseCase = mockk(relaxed = true)
+        peopleAIIntentHandler = mockk(relaxed = true) {
+            every { intents } returns emptyFlow()
+        }
         savedStateHandle = SavedStateHandle(mapOf(PersonDetailViewModel.ARG_PERSON_ID to 123))
         every { favoritesRepository.isPersonFavorite(any()) } returns flowOf(false)
     }
@@ -118,13 +124,13 @@ class PersonDetailViewModelTest {
     }
 
     @Test
-    fun `retry reloads person detail`() = runTest {
+    fun `Retry reloads person detail`() = runTest {
         every { getPersonDetailUseCase(123) } returns flowOf(Result.Success(createPersonDetail()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.retry()
+        viewModel.handleIntent(PersonDetailIntent.Retry)
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 2) { getPersonDetailUseCase(123) }
@@ -135,7 +141,7 @@ class PersonDetailViewModelTest {
         savedStateHandle = SavedStateHandle(mapOf(PersonDetailViewModel.ARG_PERSON_ID to 456))
         every { getPersonDetailUseCase(456) } returns flowOf(Result.Success(createPersonDetail(456)))
 
-        val viewModel = createViewModel()
+        createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify { getPersonDetailUseCase(456) }
@@ -156,7 +162,8 @@ class PersonDetailViewModelTest {
         savedStateHandle,
         getPersonDetailUseCase,
         favoritesRepository,
-        togglePersonFavoriteUseCase
+        togglePersonFavoriteUseCase,
+        peopleAIIntentHandler
     )
 
     private fun createPersonDetail(id: Int = 123) = PersonDetail(

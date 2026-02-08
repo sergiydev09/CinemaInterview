@@ -4,7 +4,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("io.github.sergiydev09.mockkhttp") version "1.4.30"
+//    id("io.github.sergiydev09.mockkhttp") version "1.4.30"
 }
 
 android {
@@ -50,6 +50,9 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.domain)
     implementation(projects.core.ui)
+    implementation(projects.core.ai.data)
+    implementation(projects.core.ai.domain)
+    implementation(projects.core.ai.ui)
     implementation(projects.core.features.favorites.data)
     implementation(projects.core.features.favorites.domain)
 

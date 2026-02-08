@@ -16,8 +16,8 @@ fun PeopleScreen(
     PeopleContent(
         uiState = uiState,
         onPersonClick = onPersonClick,
-        onFavoriteClick = viewModel::toggleFavorite,
-        onTimeWindowChanged = viewModel::onTimeWindowChanged,
-        onRetry = viewModel::retry
+        onFavoriteClick = { viewModel.handleIntent(PeopleIntent.ToggleFavorite(it)) },
+        onTimeWindowChanged = { viewModel.handleIntent(PeopleIntent.ChangeTimeWindow(it)) },
+        onRetry = { viewModel.handleIntent(PeopleIntent.Retry) }
     )
 }

@@ -3,12 +3,14 @@ package com.cinema.movies.ui.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cinema.core.ai.domain.model.AIIntent
 import com.cinema.core.domain.util.Result
 import com.cinema.core.favorites.domain.repository.FavoritesRepository
 import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.mapper.toFavoriteMovie
 import com.cinema.movies.domain.model.MovieDetail
 import com.cinema.movies.domain.usecase.GetMovieDetailUseCase
+import com.cinema.movies.ui.ai.MoviesAIIntentHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,12 +26,18 @@ data class MovieDetailUiState(
     val error: String? = null
 )
 
+sealed interface MovieDetailIntent : AIIntent {
+    data object ToggleFavorite : MovieDetailIntent
+    data object Retry : MovieDetailIntent
+}
+
 @HiltViewModel
 class MovieDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getMovieDetailUseCase: GetMovieDetailUseCase,
     private val favoritesRepository: FavoritesRepository,
-    private val toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
+    private val toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase,
+    private val moviesAIIntentHandler: MoviesAIIntentHandler
 ) : ViewModel() {
 
     private val movieId: Int = savedStateHandle.get<Int>(ARG_MOVIE_ID) ?: 0
@@ -40,6 +48,22 @@ class MovieDetailViewModel @Inject constructor(
     init {
         loadMovieDetail()
         observeFavoriteStatus()
+        observeAIIntents()
+    }
+
+    fun handleIntent(intent: MovieDetailIntent) {
+        when (intent) {
+            is MovieDetailIntent.ToggleFavorite -> toggleFavorite()
+            is MovieDetailIntent.Retry -> loadMovieDetail()
+        }
+    }
+
+    private fun observeAIIntents() {
+        viewModelScope.launch {
+            moviesAIIntentHandler.intents.collect { intent ->
+                (intent as? MovieDetailIntent)?.let(::handleIntent)
+            }
+        }
     }
 
     private fun observeFavoriteStatus() {
@@ -50,7 +74,7 @@ class MovieDetailViewModel @Inject constructor(
         }
     }
 
-    fun loadMovieDetail() {
+    private fun loadMovieDetail() {
         viewModelScope.launch {
             getMovieDetailUseCase(movieId).collect { result ->
                 when (result) {
@@ -70,16 +94,12 @@ class MovieDetailViewModel @Inject constructor(
         }
     }
 
-    fun toggleFavorite() {
+    private fun toggleFavorite() {
         _uiState.value.movie?.run {
             viewModelScope.launch {
                 toggleMovieFavoriteUseCase(toFavoriteMovie())
             }
         }
-    }
-
-    fun retry() {
-        loadMovieDetail()
     }
 
     companion object {

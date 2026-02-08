@@ -26,7 +26,7 @@ fun MovieDetailScreen(
         error != null -> {
             ErrorContent(
                 message = error,
-                onRetry = viewModel::retry
+                onRetry = { viewModel.handleIntent(MovieDetailIntent.Retry) }
             )
         }
 
@@ -34,7 +34,7 @@ fun MovieDetailScreen(
             MovieDetailContent(
                 movie = movie,
                 isFavorite = uiState.isFavorite,
-                onFavoriteClick = viewModel::toggleFavorite,
+                onFavoriteClick = { viewModel.handleIntent(MovieDetailIntent.ToggleFavorite) },
                 onBackClick = onBackClick
             )
         }

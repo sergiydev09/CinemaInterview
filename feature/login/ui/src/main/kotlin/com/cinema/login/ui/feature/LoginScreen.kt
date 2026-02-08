@@ -24,9 +24,9 @@ fun LoginScreen(
 
     LoginContent(
         uiState = uiState,
-        onUsernameChanged = viewModel::onUsernameChanged,
-        onPasswordChanged = viewModel::onPasswordChanged,
-        onRememberUsernameChanged = viewModel::onRememberUsernameChanged,
-        onLoginClicked = viewModel::onLoginClicked
+        onUsernameChanged = { viewModel.handleIntent(LoginIntent.UsernameChanged(it)) },
+        onPasswordChanged = { viewModel.handleIntent(LoginIntent.PasswordChanged(it)) },
+        onRememberUsernameChanged = { viewModel.handleIntent(LoginIntent.RememberUsernameChanged(it)) },
+        onLoginClicked = { viewModel.handleIntent(LoginIntent.LoginClicked) }
     )
 }

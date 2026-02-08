@@ -2,12 +2,14 @@ package com.cinema.movies.ui.feature.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cinema.core.ai.domain.model.AIIntent
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
 import com.cinema.core.favorites.domain.model.FavoriteMovie
 import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.model.Movie
 import com.cinema.movies.domain.usecase.GetTrendingMoviesUseCase
+import com.cinema.movies.ui.ai.MoviesAIIntentHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,20 +25,44 @@ data class MoviesUiState(
     val selectedTimeWindow: TimeWindow = TimeWindow.DAY
 )
 
+sealed interface MoviesIntent : AIIntent {
+    data class ChangeTimeWindow(val timeWindow: TimeWindow) : MoviesIntent
+    data class ToggleFavorite(val movie: Movie) : MoviesIntent
+    data object Retry : MoviesIntent
+}
+
 @HiltViewModel
 class MoviesViewModel @Inject constructor(
     private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
-    private val toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
+    private val toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase,
+    private val moviesAIIntentHandler: MoviesAIIntentHandler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MoviesUiState())
     val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
 
     init {
+        observeAIIntents()
         loadMovies()
     }
 
-    fun toggleFavorite(movie: Movie) {
+    fun handleIntent(intent: MoviesIntent) {
+        when (intent) {
+            is MoviesIntent.ChangeTimeWindow -> changeTimeWindow(intent.timeWindow)
+            is MoviesIntent.ToggleFavorite -> toggleFavorite(intent.movie)
+            is MoviesIntent.Retry -> loadMovies()
+        }
+    }
+
+    private fun observeAIIntents() {
+        viewModelScope.launch {
+            moviesAIIntentHandler.intents.collect { intent ->
+                (intent as? MoviesIntent)?.let(::handleIntent)
+            }
+        }
+    }
+
+    private fun toggleFavorite(movie: Movie) {
         viewModelScope.launch {
             toggleMovieFavoriteUseCase(movie.toFavoriteMovie())
         }
@@ -49,13 +75,12 @@ class MoviesViewModel @Inject constructor(
         releaseDate = releaseDate
     )
 
-    fun loadMovies() {
+    private fun loadMovies() {
         viewModelScope.launch {
             getTrendingMoviesUseCase(_uiState.value.selectedTimeWindow).collect { result ->
                 when (result) {
                     is Result.Loading -> {
                         _uiState.update { state ->
-                            // Only show loading if we don't have data yet
                             state.copy(
                                 isLoading = state.movies.isEmpty(),
                                 error = null
@@ -75,14 +100,10 @@ class MoviesViewModel @Inject constructor(
         }
     }
 
-    fun onTimeWindowChanged(timeWindow: TimeWindow) {
+    private fun changeTimeWindow(timeWindow: TimeWindow) {
         if (timeWindow != _uiState.value.selectedTimeWindow) {
             _uiState.update { it.copy(selectedTimeWindow = timeWindow) }
             loadMovies()
         }
-    }
-
-    fun retry() {
-        loadMovies()
     }
 }

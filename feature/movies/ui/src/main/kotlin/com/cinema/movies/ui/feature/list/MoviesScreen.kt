@@ -16,8 +16,8 @@ fun MoviesScreen(
     MoviesContent(
         uiState = uiState,
         onMovieClick = onMovieClick,
-        onFavoriteClick = viewModel::toggleFavorite,
-        onTimeWindowChanged = viewModel::onTimeWindowChanged,
-        onRetry = viewModel::retry
+        onFavoriteClick = { viewModel.handleIntent(MoviesIntent.ToggleFavorite(it)) },
+        onTimeWindowChanged = { viewModel.handleIntent(MoviesIntent.ChangeTimeWindow(it)) },
+        onRetry = { viewModel.handleIntent(MoviesIntent.Retry) }
     )
 }
