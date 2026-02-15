@@ -8,6 +8,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 class DataConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -45,6 +46,14 @@ class DataConventionPlugin : Plugin<Project> {
                             excludes = listOf("jdk.internal.*")
                         }
                     }
+                }
+            }
+
+            extensions.configure<KotlinAndroidProjectExtension> {
+                compilerOptions {
+                    freeCompilerArgs.addAll(
+                        "-opt-in=kotlinx.serialization.InternalSerializationApi"
+                    )
                 }
             }
 

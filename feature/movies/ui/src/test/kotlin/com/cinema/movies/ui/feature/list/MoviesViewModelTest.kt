@@ -3,8 +3,8 @@ package com.cinema.movies.ui.feature.list
 import app.cash.turbine.test
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.model.Movie
+import com.cinema.movies.domain.repository.MoviesRepository
 import com.cinema.movies.domain.usecase.GetTrendingMoviesUseCase
 import com.cinema.movies.ui.ai.MoviesAIIntentHandler
 import io.mockk.coVerify
@@ -31,7 +31,7 @@ import org.junit.Test
 class MoviesViewModelTest {
 
     private lateinit var getTrendingMoviesUseCase: GetTrendingMoviesUseCase
-    private lateinit var toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
+    private lateinit var moviesRepository: MoviesRepository
     private lateinit var moviesAIIntentHandler: MoviesAIIntentHandler
     private val testDispatcher = StandardTestDispatcher()
 
@@ -39,7 +39,7 @@ class MoviesViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getTrendingMoviesUseCase = mockk()
-        toggleMovieFavoriteUseCase = mockk(relaxed = true)
+        moviesRepository = mockk(relaxed = true)
         moviesAIIntentHandler = mockk(relaxed = true) {
             every { intents } returns emptyFlow()
         }
@@ -175,12 +175,12 @@ class MoviesViewModelTest {
         viewModel.handleIntent(MoviesIntent.ToggleFavorite(movie))
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { toggleMovieFavoriteUseCase(any()) }
+        coVerify { moviesRepository.toggleFavoriteMovie(any(), any(), any(), any()) }
     }
 
     private fun createViewModel() = MoviesViewModel(
         getTrendingMoviesUseCase,
-        toggleMovieFavoriteUseCase,
+        moviesRepository,
         moviesAIIntentHandler
     )
 

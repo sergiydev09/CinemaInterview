@@ -1,11 +1,15 @@
 package com.cinema.movies.data.repository
 
+import com.cinema.core.data.datasource.SecureLocalDataSource
 import com.cinema.movies.data.datasource.MoviesRemoteDataSource
 import com.cinema.movies.data.network.model.MovieDTO
 import com.cinema.movies.data.network.model.MovieDetailDTO
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -14,12 +18,16 @@ import org.junit.Test
 class MoviesRepositoryImplTest {
 
     private lateinit var remoteDataSource: MoviesRemoteDataSource
+    private lateinit var secureLocalDataSource: SecureLocalDataSource
     private lateinit var repository: MoviesRepositoryImpl
 
     @Before
     fun setup() {
         remoteDataSource = mockk()
-        repository = MoviesRepositoryImpl(remoteDataSource)
+        secureLocalDataSource = mockk {
+            every { observe<Any>(any(), any()) } returns flowOf(null)
+        }
+        repository = MoviesRepositoryImpl(remoteDataSource, secureLocalDataSource)
     }
 
     @Test
@@ -27,7 +35,7 @@ class MoviesRepositoryImplTest {
         val movieDtos = listOf(createMovieDto(1), createMovieDto(2))
         coEvery { remoteDataSource.getTrendingMovies("day") } returns movieDtos
 
-        val result = repository.getTrendingMovies("day")
+        val result = repository.getTrendingMovies("day").first()
 
         assertEquals(2, result.size)
         coVerify { remoteDataSource.getTrendingMovies("day") }
@@ -38,7 +46,7 @@ class MoviesRepositoryImplTest {
         val movieDto = createMovieDto(1, "Test Movie")
         coEvery { remoteDataSource.getTrendingMovies("day") } returns listOf(movieDto)
 
-        val result = repository.getTrendingMovies("day")
+        val result = repository.getTrendingMovies("day").first()
 
         val movie = result.first()
         assertEquals(1, movie.id)
@@ -61,7 +69,7 @@ class MoviesRepositoryImplTest {
     fun `getTrendingMovies throws exception from data source`() = runTest {
         coEvery { remoteDataSource.getTrendingMovies("day") } throws Exception("Network error")
 
-        repository.getTrendingMovies("day")
+        repository.getTrendingMovies("day").first()
     }
 
     @Test(expected = Exception::class)

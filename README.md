@@ -13,31 +13,34 @@ CinemaInterview/
 ├── app/                    # Application module
 │   └── navigation/        # Main NavGraph, SessionNavigator
 ├── core/
-│   ├── data/              # Networking, session, security, image URL utilities
+│   ├── data/              # Networking, session, security (SecureLocalDataSource), image URLs
 │   ├── domain/            # Result wrapper, Flow extensions, SessionManager
-│   ├── features/          # Shared features that connect other features
-│   │   └── favorites/     # Favorites management (used by movies, people, home)
-│   │       ├── data/      # Repository implementation, entities
-│   │       └── domain/    # Use cases, repository interface, models
+│   ├── features/
+│   │   └── ai/            # AI voice assistant ([docs](core/features/ai/AI_FEATURE.md))
+│   │       ├── data/      # OpenRouter API, AIManagerImpl (orchestrator)
+│   │       ├── domain/    # AIIntent, AIIntentHandler, AIManager, AIRepository
+│   │       └── ui/        # Speech recognition, AIFab, AIInputBar, overlay
 │   └── ui/                # Compose components, theme, navigation utilities
 │       ├── compose/       # Reusable composables (LoadingContent, ErrorContent, etc.)
 │       ├── theme/         # Material 3 theme (colors, typography, shapes)
 │       └── navigation/    # DeeplinkScheme, BottomNavBar
 └── feature/
     ├── home/
+    │   ├── data/          # FavoritesRepositoryImpl (reads from SecureLocalDataSource)
+    │   ├── domain/        # FavoritesRepository, FavoriteMovie, FavoritePerson models
     │   └── ui/            # HomeScreen with favorites display
     ├── login/
     │   ├── data/          # Repository implementations, data sources
     │   ├── domain/        # Use cases, repository interfaces, models
     │   └── ui/            # Screens, ViewModels, views
     ├── movies/
-    │   ├── data/
-    │   ├── domain/        # Models, use cases, FavoriteMovie mapper
-    │   └── ui/            # MoviesScreen, MovieDetailScreen
+    │   ├── data/          # MoviesRepositoryImpl (API + favorites via SecureLocalDataSource)
+    │   ├── domain/        # Models, use cases, repository interface
+    │   └── ui/            # MoviesScreen, MovieDetailScreen, MoviesAIIntentHandler
     └── people/
-        ├── data/
-        ├── domain/        # Models, use cases, FavoritePerson mapper
-        └── ui/            # PeopleScreen, PersonDetailScreen
+        ├── data/          # PeopleRepositoryImpl (API + favorites via SecureLocalDataSource)
+        ├── domain/        # Models, use cases, repository interface
+        └── ui/            # PeopleScreen, PersonDetailScreen, PeopleAIIntentHandler
 ```
 
 ### Key Technologies
@@ -49,17 +52,18 @@ CinemaInterview/
 
 ### Libraries & Frameworks
 
-| Category       | Library                                              |
-|----------------|------------------------------------------------------|
-| DI             | Hilt                                                 |
-| Networking     | Retrofit + OkHttp + Moshi                            |
-| UI             | **Jetpack Compose** + Material Design 3              |
-| Architecture   | MVVM, StateFlow, Coroutines Flow                     |
-| Storage        | DataStore + Tink (encryption)                        |
-| Image Loading  | Coil 3 (Compose)                                     |
-| Navigation     | **Compose Navigation** (type-safe with serialization)|
-| Serialization  | kotlinx-serialization-json                           |
-| Testing        | JUnit, MockK, Turbine                                |
+| Category      | Library                                                   |
+|---------------|-----------------------------------------------------------|
+| DI            | Hilt                                                      |
+| Networking    | Retrofit + OkHttp + kotlinx-serialization                 |
+| UI            | **Jetpack Compose** + Material Design 3                   |
+| Architecture  | MVI (Model-View-Intent), StateFlow, Coroutines Flow       |
+| Storage       | DataStore + Tink (encryption)                             |
+| Image Loading | Coil 3 (Compose)                                          |
+| Navigation    | **Compose Navigation** (type-safe with serialization)     |
+| Serialization | kotlinx-serialization-json                                |
+| AI Assistant  | OpenRouter API (stepfun model) + Android SpeechRecognizer |
+| Testing       | JUnit, MockK, Turbine                                     |
 
 ## Features
 
@@ -82,7 +86,17 @@ CinemaInterview/
 - **Favorite toggle** on detail screen
 - Loading and error states
 
-### 4. People Screen
+### 4. AI Assistant ([detailed docs](core/features/ai/AI_FEATURE.md))
+
+- Voice and text commands via OpenRouter LLM
+- Navigate between screens: _"go to movies"_
+- Filter by genre, year, rating, etc.: _"horror movies"_, _"actors over 50"_
+- Navigate to detail: _"show me Gladiator"_
+- Multi-step chaining: _"romantic movies this week"_ (from any screen)
+- Screen context awareness — LLM sees what's currently displayed
+- Active filter chip with clear button
+
+### 5. People Screen
 - Trending people list with LazyColumn
 - Day/Week time window filter toggle
 - Profile photos with known works
@@ -96,26 +110,38 @@ CinemaInterview/
 
 1. **Data Layer**: DTOs, Mappers, DataSources, Repository implementations
 2. **Domain Layer**: Models, Repository interfaces, Use Cases, Result wrapper
-3. **UI Layer**: Compose Screens, ViewModels (StateFlow), UI State classes
+3. **UI Layer**: Compose Screens, ViewModels (MVI with StateFlow), Intents, UI State classes
 
 ### Repository & UseCase Pattern
 
-Repositories are simple `suspend` functions that return data directly:
+Repositories return reactive `Flow`s that combine API data with local storage (favorites from DataStore):
 
 ```kotlin
 interface MoviesRepository {
-    suspend fun getTrendingMovies(timeWindow: String): List<Movie>
+    fun getTrendingMovies(timeWindow: String): Flow<List<Movie>>
     suspend fun getMovieDetail(movieId: Int): MovieDetail
+    fun isMovieFavorite(movieId: Int): Flow<Boolean>
+    suspend fun toggleFavoriteMovie(id: Int, title: String, posterUrl: String?, releaseDate: String?)
 }
 ```
 
-UseCases wrap repository calls with `asResult()` to provide Loading/Success/Error states:
+Repository implementations use `combine` to merge API results with reactive favorites from `SecureLocalDataSource.observe()`:
+
+```kotlin
+override fun getTrendingMovies(timeWindow: String): Flow<List<Movie>> =
+    flow { emit(remoteDataSource.getTrendingMovies(timeWindow).toDomainList()) }
+        .combine(secureLocalDataSource.observe<Map<Int, FavoriteMovieDTO>>(KEY)) { movies, favorites ->
+            val favoriteIds = favorites?.keys ?: emptySet()
+            movies.map { it.copy(isFavorite = it.id in favoriteIds) }
+        }
+```
+
+UseCases wrap repository flows with `asResult()` to provide Loading/Success/Error states:
 
 ```kotlin
 class GetTrendingMoviesUseCase(private val repository: MoviesRepository) {
-    operator fun invoke(timeWindow: TimeWindow = TimeWindow.DAY): Flow<Result<List<Movie>>> = flow {
-        emit(repository.getTrendingMovies(timeWindow.value))
-    }.asResult()
+    operator fun invoke(timeWindow: TimeWindow = TimeWindow.DAY): Flow<Result<List<Movie>>> =
+        repository.getTrendingMovies(timeWindow.value).asResult()
 }
 ```
 
@@ -140,33 +166,77 @@ fun <T> Flow<T>.asResult(): Flow<Result<T>> = this
     .catch { emit(Result.Error(it.message ?: "Unknown error", it)) }
 ```
 
-### State Management
+### MVI Pattern (Model-View-Intent)
 
-UI state is managed with **StateFlow** and observed using `collectAsStateWithLifecycle()`:
-
-```kotlin
-// ViewModel
-data class MoviesUiState(
-    val movies: List<Movie> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val timeWindow: TimeWindow = TimeWindow.DAY
-)
-
-private val _uiState = MutableStateFlow(MoviesUiState())
-val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
-```
+The project uses **MVI** with **Unidirectional Data Flow (UDF)**, following [Google's architecture guide](https://developer.android.com/topic/architecture/ui-layer). Each screen
+defines a sealed interface of Intents shared by both UI and AI assistant:
 
 ```kotlin
-// Screen Composable
-@Composable
-fun MoviesScreen(viewModel: MoviesViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    // Render based on uiState
+// Intents — shared by UI and AI
+sealed interface MoviesIntent : AIIntent {
+    data class ChangeTimeWindow(val timeWindow: TimeWindow) : MoviesIntent
+    data class ToggleFavorite(val movie: Movie) : MoviesIntent
+    data class ApplyFilter(val matchedIds: List<Int>, val label: String) : MoviesIntent
+    data class NavigateToDetail(val movieId: Int) : MoviesIntent
+    data object ClearFilter : MoviesIntent
+    data object Retry : MoviesIntent
 }
 ```
 
-One-time events (navigation, snackbars) use `SharedFlow<Event>` collected in `LaunchedEffect`.
+```kotlin
+// ViewModel — single MutableStateFlow, handleIntent as sole entry point
+@HiltViewModel
+class MoviesViewModel @Inject constructor(
+    private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
+    private val moviesRepository: MoviesRepository,
+    ...
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(MoviesUiState())
+    val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
+
+    private var moviesJob: Job? = null
+
+    init { loadMovies(TimeWindow.DAY) }
+
+    fun handleIntent(intent: MoviesIntent) {
+        when (intent) {
+            is MoviesIntent.ChangeTimeWindow -> { /* update state + loadMovies(tw) */ }
+            is MoviesIntent.ToggleFavorite -> { /* fire-and-forget coroutine */ }
+            is MoviesIntent.Retry -> loadMovies(_uiState.value.selectedTimeWindow)
+            ...
+        }
+    }
+
+    private fun loadMovies(timeWindow: TimeWindow) {
+        moviesJob?.cancel()
+        moviesJob = viewModelScope.launch {
+            getTrendingMoviesUseCase(timeWindow).collect { result ->
+                _uiState.update { /* map Result to UiState */ }
+            }
+        }
+    }
+}
+```
+
+```kotlin
+// Screen — sends intents from UI events
+@Composable
+fun MoviesScreen(viewModel: MoviesViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    MoviesContent(
+        onTimeWindowChanged = { viewModel.handleIntent(MoviesIntent.ChangeTimeWindow(it)) },
+        onFavoriteClick = { viewModel.handleIntent(MoviesIntent.ToggleFavorite(it)) },
+        onClearFilter = { viewModel.handleIntent(MoviesIntent.ClearFilter) },
+        onRetry = { viewModel.handleIntent(MoviesIntent.Retry) }
+    )
+}
+```
+
+The same intents are dispatched by the AI assistant via `AIIntentHandler`, so voice commands like _"show horror movies"_ trigger `MoviesIntent.ApplyFilter(...)` through exactly the
+same `handleIntent()` method.
+
+One-time events (navigation) use `SharedFlow<Event>` collected in `LaunchedEffect`.
 
 ### Dependency Injection
 
@@ -249,33 +319,34 @@ The implementation (`SessionManagerImpl`) coordinates with `AuthInterceptor` to 
 **SecureLocalDataSource** (`core/data`): Encrypted storage using Google Tink + DataStore:
 - Uses **AES-GCM** encryption for sensitive data
 - Stores encrypted values in **DataStore Preferences**
-- Supports any serializable type via **Moshi**
+- Supports any serializable type via **kotlinx-serialization**
+- Reactive `observe()` method returns `Flow` that emits on every DataStore change
 - Auto-removes corrupted data on decryption failure
 
 ```kotlin
-// Usage example
+// One-shot read/write
 secureDataSource.save("username", "john_doe")
-val username: String? = secureDataSource.get("username")
+val username: String = secureDataSource.get("username")
+
+// Reactive observation (emits on every change)
+secureDataSource.observe<Map<Int, FavoriteMovieDTO>>("favorite_movies")
+    .collect { favorites -> /* reacts to changes from any feature */ }
 ```
 
-### Favorites Module
+### Favorites Architecture
 
-**core/features/favorites** provides local favorites management (shared across multiple features):
+Favorites are **distributed across feature modules** (no centralized favorites module). Each feature owns its favorite data:
 
-- **Domain**: `FavoritesRepository`, `FavoriteMovie`, `FavoritePerson` models
-- **Use Cases**: `ToggleMovieFavoriteUseCase`, `TogglePersonFavoriteUseCase`
-- **Data**: In-memory repository implementation with reactive `Flow` updates
+- **Movies/People data layer**: `toggleFavoriteMovie()`/`toggleFavoritePerson()` write to `SecureLocalDataSource`
+- **Movies/People data layer**: `getTrendingMovies()` combines API results with `observe(favorites)` for reactive favorite status
+- **Home data layer**: Reads favorites from the same DataStore keys via `observe()`, ensuring cross-feature reactivity
 
-```kotlin
-// Toggle favorite from ViewModel
-viewModelScope.launch {
-    toggleMovieFavoriteUseCase(movie)
-}
-
-// Observe favorites reactively
-favoritesRepository.getFavoriteMovies()
-    .collect { movies -> /* update UI */ }
 ```
+Movies ──toggle──> SecureLocalDataSource <──observe── Home
+People ──toggle──> SecureLocalDataSource <──observe── Home
+```
+
+This ensures a **single source of truth** (DataStore) with reactive updates across all features.
 
 ## Building & Running
 
@@ -331,8 +402,9 @@ Testing libraries:
 - [x] **Jetpack Compose**: Migrated to Compose UI (no Fragments)
 - [x] **Theming**: Implemented Material 3 dark theme
 - [x] **Favorites**: Added local favorites management
+- [x] **AI Assistant**: Voice/text commands with intent chaining and screen context
 - [ ] **Decorator Pattern**: Apply decorator for cross-cutting concerns (logging, caching)
-- [ ] **Persistent Favorites**: Store favorites with Room database
+- [x] **Persistent Favorites**: Encrypted favorites via SecureLocalDataSource (DataStore + Tink)
 
 ## Project Conventions
 

@@ -5,10 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.ai.domain.model.AIIntent
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
-import com.cinema.movies.domain.mapper.toFavoriteMovie
 import com.cinema.movies.domain.model.MovieDetail
+import com.cinema.movies.domain.repository.MoviesRepository
 import com.cinema.movies.domain.usecase.GetMovieDetailUseCase
 import com.cinema.movies.ui.ai.MoviesAIIntentHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,8 +33,7 @@ sealed interface MovieDetailIntent : AIIntent {
 class MovieDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getMovieDetailUseCase: GetMovieDetailUseCase,
-    private val favoritesRepository: FavoritesRepository,
-    private val toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase,
+    private val moviesRepository: MoviesRepository,
     private val moviesAIIntentHandler: MoviesAIIntentHandler
 ) : ViewModel() {
 
@@ -68,7 +65,7 @@ class MovieDetailViewModel @Inject constructor(
 
     private fun observeFavoriteStatus() {
         viewModelScope.launch {
-            favoritesRepository.isMovieFavorite(movieId).collect { isFavorite ->
+            moviesRepository.isMovieFavorite(movieId).collect { isFavorite ->
                 _uiState.update { it.copy(isFavorite = isFavorite) }
             }
         }
@@ -97,7 +94,7 @@ class MovieDetailViewModel @Inject constructor(
     private fun toggleFavorite() {
         _uiState.value.movie?.run {
             viewModelScope.launch {
-                toggleMovieFavoriteUseCase(toFavoriteMovie())
+                moviesRepository.toggleFavoriteMovie(id, title, posterUrl, releaseDate)
             }
         }
     }

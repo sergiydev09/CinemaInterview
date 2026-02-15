@@ -10,6 +10,7 @@ data class Movie(
     val voteAverage: Double,
     val voteCount: Int,
     val popularity: Double,
+    val genreNames: List<String> = emptyList(),
     val isFavorite: Boolean = false
 )
 

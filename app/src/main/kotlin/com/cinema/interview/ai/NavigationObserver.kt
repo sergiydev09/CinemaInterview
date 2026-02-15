@@ -16,6 +16,7 @@ fun NavigationObserver(
     LaunchedEffect(backStackEntry) {
         val uri = backStackEntry?.destination?.route
             ?.substringAfterLast(".")
+            ?.substringBefore("/")
             ?.removeSuffix("Route")
             ?.fold(StringBuilder()) { sb, c ->
                 if (c.isUpperCase() && sb.isNotEmpty()) sb.append('_')

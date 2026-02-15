@@ -3,8 +3,8 @@ package com.cinema.people.ui.feature.list
 import app.cash.turbine.test
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.Person
+import com.cinema.people.domain.repository.PeopleRepository
 import com.cinema.people.domain.usecase.GetTrendingPeopleUseCase
 import com.cinema.people.ui.ai.PeopleAIIntentHandler
 import io.mockk.coVerify
@@ -31,7 +31,7 @@ import org.junit.Test
 class PeopleViewModelTest {
 
     private lateinit var getTrendingPeopleUseCase: GetTrendingPeopleUseCase
-    private lateinit var togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
+    private lateinit var peopleRepository: PeopleRepository
     private lateinit var peopleAIIntentHandler: PeopleAIIntentHandler
     private val testDispatcher = StandardTestDispatcher()
 
@@ -39,7 +39,7 @@ class PeopleViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getTrendingPeopleUseCase = mockk()
-        togglePersonFavoriteUseCase = mockk(relaxed = true)
+        peopleRepository = mockk(relaxed = true)
         peopleAIIntentHandler = mockk(relaxed = true) {
             every { intents } returns emptyFlow()
         }
@@ -175,12 +175,12 @@ class PeopleViewModelTest {
         viewModel.handleIntent(PeopleIntent.ToggleFavorite(person))
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { togglePersonFavoriteUseCase(any()) }
+        coVerify { peopleRepository.toggleFavoritePerson(any(), any(), any()) }
     }
 
     private fun createViewModel() = PeopleViewModel(
         getTrendingPeopleUseCase,
-        togglePersonFavoriteUseCase,
+        peopleRepository,
         peopleAIIntentHandler
     )
 

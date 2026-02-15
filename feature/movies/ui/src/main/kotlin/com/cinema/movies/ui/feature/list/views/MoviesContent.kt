@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.ui.compose.ErrorContent
+import com.cinema.core.ui.compose.FilterChipBar
 import com.cinema.core.ui.compose.LoadingContent
 import com.cinema.core.ui.compose.TimeWindowToggle
 import com.cinema.core.ui.lazylist.rememberAnimatedLazyGridState
@@ -36,6 +37,7 @@ fun MoviesContent(
     onMovieClick: (Int) -> Unit,
     onFavoriteClick: (Movie) -> Unit,
     onTimeWindowChanged: (TimeWindow) -> Unit,
+    onClearFilter: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -60,6 +62,14 @@ fun MoviesContent(
             )
         }
 
+        if (uiState.activeFilterLabel != null) {
+            FilterChipBar(
+                label = uiState.activeFilterLabel,
+                resultCount = uiState.displayedMovies.size,
+                onClear = onClearFilter
+            )
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             val gridState = rememberLazyGridState()
             rememberAnimatedLazyGridState(gridState)
@@ -76,6 +86,19 @@ fun MoviesContent(
                     )
                 }
 
+                uiState.activeFilterLabel != null && uiState.displayedMovies.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No movies match this filter",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
                 else -> {
                     LazyVerticalGrid(
                         state = gridState,
@@ -85,7 +108,7 @@ fun MoviesContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(
-                            items = uiState.movies,
+                            items = uiState.displayedMovies,
                             key = { it.id }
                         ) { movie ->
                             MovieItem(
@@ -112,6 +135,7 @@ private fun MoviesContentLoadingPreview() {
             onMovieClick = {},
             onFavoriteClick = {},
             onTimeWindowChanged = {},
+            onClearFilter = {},
             onRetry = {}
         )
     }
@@ -152,6 +176,7 @@ private fun MoviesContentSuccessPreview() {
             onMovieClick = {},
             onFavoriteClick = {},
             onTimeWindowChanged = {},
+            onClearFilter = {},
             onRetry = {}
         )
     }
@@ -166,6 +191,7 @@ private fun MoviesContentErrorPreview() {
             onMovieClick = {},
             onFavoriteClick = {},
             onTimeWindowChanged = {},
+            onClearFilter = {},
             onRetry = {}
         )
     }

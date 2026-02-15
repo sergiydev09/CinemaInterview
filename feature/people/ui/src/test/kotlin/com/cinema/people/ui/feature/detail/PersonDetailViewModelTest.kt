@@ -3,9 +3,8 @@ package com.cinema.people.ui.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.PersonDetail
+import com.cinema.people.domain.repository.PeopleRepository
 import com.cinema.people.domain.usecase.GetPersonDetailUseCase
 import com.cinema.people.ui.ai.PeopleAIIntentHandler
 import io.mockk.every
@@ -32,8 +31,7 @@ import org.junit.Test
 class PersonDetailViewModelTest {
 
     private lateinit var getPersonDetailUseCase: GetPersonDetailUseCase
-    private lateinit var favoritesRepository: FavoritesRepository
-    private lateinit var togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
+    private lateinit var peopleRepository: PeopleRepository
     private lateinit var peopleAIIntentHandler: PeopleAIIntentHandler
     private lateinit var savedStateHandle: SavedStateHandle
     private val testDispatcher = StandardTestDispatcher()
@@ -42,13 +40,12 @@ class PersonDetailViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getPersonDetailUseCase = mockk()
-        favoritesRepository = mockk(relaxed = true)
-        togglePersonFavoriteUseCase = mockk(relaxed = true)
+        peopleRepository = mockk(relaxed = true)
         peopleAIIntentHandler = mockk(relaxed = true) {
             every { intents } returns emptyFlow()
         }
         savedStateHandle = SavedStateHandle(mapOf(PersonDetailViewModel.ARG_PERSON_ID to 123))
-        every { favoritesRepository.isPersonFavorite(any()) } returns flowOf(false)
+        every { peopleRepository.isPersonFavorite(any()) } returns flowOf(false)
     }
 
     @After
@@ -161,8 +158,7 @@ class PersonDetailViewModelTest {
     private fun createViewModel() = PersonDetailViewModel(
         savedStateHandle,
         getPersonDetailUseCase,
-        favoritesRepository,
-        togglePersonFavoriteUseCase,
+        peopleRepository,
         peopleAIIntentHandler
     )
 

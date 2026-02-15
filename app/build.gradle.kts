@@ -41,20 +41,14 @@ android {
     }
 }
 
-composeCompiler {
-    enableStrongSkippingMode = true
-}
-
 dependencies {
     // Core modules
     implementation(projects.core.data)
     implementation(projects.core.domain)
     implementation(projects.core.ui)
-    implementation(projects.core.ai.data)
-    implementation(projects.core.ai.domain)
-    implementation(projects.core.ai.ui)
-    implementation(projects.core.features.favorites.data)
-    implementation(projects.core.features.favorites.domain)
+    implementation(projects.core.features.ai.data)
+    implementation(projects.core.features.ai.domain)
+    implementation(projects.core.features.ai.ui)
 
     // Feature modules
     implementation(projects.feature.login.ui)

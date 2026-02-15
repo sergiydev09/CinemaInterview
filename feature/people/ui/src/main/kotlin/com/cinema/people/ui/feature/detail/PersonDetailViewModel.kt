@@ -5,10 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinema.core.ai.domain.model.AIIntent
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
-import com.cinema.people.domain.mapper.toFavoritePerson
 import com.cinema.people.domain.model.PersonDetail
+import com.cinema.people.domain.repository.PeopleRepository
 import com.cinema.people.domain.usecase.GetPersonDetailUseCase
 import com.cinema.people.ui.ai.PeopleAIIntentHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,8 +33,7 @@ sealed interface PersonDetailIntent : AIIntent {
 class PersonDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getPersonDetailUseCase: GetPersonDetailUseCase,
-    private val favoritesRepository: FavoritesRepository,
-    private val togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase,
+    private val peopleRepository: PeopleRepository,
     private val peopleAIIntentHandler: PeopleAIIntentHandler
 ) : ViewModel() {
 
@@ -68,7 +65,7 @@ class PersonDetailViewModel @Inject constructor(
 
     private fun observeFavoriteStatus() {
         viewModelScope.launch {
-            favoritesRepository.isPersonFavorite(personId).collect { isFavorite ->
+            peopleRepository.isPersonFavorite(personId).collect { isFavorite ->
                 _uiState.update { it.copy(isFavorite = isFavorite) }
             }
         }
@@ -97,7 +94,7 @@ class PersonDetailViewModel @Inject constructor(
     private fun toggleFavorite() {
         _uiState.value.person?.run {
             viewModelScope.launch {
-                togglePersonFavoriteUseCase(toFavoritePerson())
+                peopleRepository.toggleFavoritePerson(id, name, profileUrl)
             }
         }
     }
