@@ -3,15 +3,17 @@ package com.cinema.people.ui.feature.list
 import app.cash.turbine.test
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
 import com.cinema.people.domain.model.Person
+import com.cinema.people.domain.repository.PeopleRepository
 import com.cinema.people.domain.usecase.GetTrendingPeopleUseCase
+import com.cinema.people.ui.ai.PeopleAIIntentHandler
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -29,14 +31,18 @@ import org.junit.Test
 class PeopleViewModelTest {
 
     private lateinit var getTrendingPeopleUseCase: GetTrendingPeopleUseCase
-    private lateinit var togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
+    private lateinit var peopleRepository: PeopleRepository
+    private lateinit var peopleAIIntentHandler: PeopleAIIntentHandler
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getTrendingPeopleUseCase = mockk()
-        togglePersonFavoriteUseCase = mockk(relaxed = true)
+        peopleRepository = mockk(relaxed = true)
+        peopleAIIntentHandler = mockk(relaxed = true) {
+            every { intents } returns emptyFlow()
+        }
     }
 
     @After
@@ -112,14 +118,14 @@ class PeopleViewModelTest {
     }
 
     @Test
-    fun `onTimeWindowChanged updates state and reloads`() = runTest {
+    fun `ChangeTimeWindow updates state and reloads`() = runTest {
         every { getTrendingPeopleUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
         every { getTrendingPeopleUseCase(TimeWindow.WEEK) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onTimeWindowChanged(TimeWindow.WEEK)
+        viewModel.handleIntent(PeopleIntent.ChangeTimeWindow(TimeWindow.WEEK))
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -132,13 +138,13 @@ class PeopleViewModelTest {
     }
 
     @Test
-    fun `onTimeWindowChanged does nothing if same timeWindow`() = runTest {
+    fun `ChangeTimeWindow does nothing if same timeWindow`() = runTest {
         every { getTrendingPeopleUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onTimeWindowChanged(TimeWindow.DAY)
+        viewModel.handleIntent(PeopleIntent.ChangeTimeWindow(TimeWindow.DAY))
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Should only be called once (from init)
@@ -146,33 +152,37 @@ class PeopleViewModelTest {
     }
 
     @Test
-    fun `retry reloads people`() = runTest {
+    fun `Retry reloads people`() = runTest {
         every { getTrendingPeopleUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.retry()
+        viewModel.handleIntent(PeopleIntent.Retry)
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 2) { getTrendingPeopleUseCase(TimeWindow.DAY) }
     }
 
     @Test
-    fun `toggleFavorite calls use case`() = runTest {
+    fun `ToggleFavorite calls use case`() = runTest {
         every { getTrendingPeopleUseCase(TimeWindow.DAY) } returns flowOf(Result.Success(emptyList()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
         val person = createPerson(1)
-        viewModel.toggleFavorite(person)
+        viewModel.handleIntent(PeopleIntent.ToggleFavorite(person))
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { togglePersonFavoriteUseCase(any()) }
+        coVerify { peopleRepository.toggleFavoritePerson(any(), any(), any()) }
     }
 
-    private fun createViewModel() = PeopleViewModel(getTrendingPeopleUseCase, togglePersonFavoriteUseCase)
+    private fun createViewModel() = PeopleViewModel(
+        getTrendingPeopleUseCase,
+        peopleRepository,
+        peopleAIIntentHandler
+    )
 
     private fun createPerson(id: Int) = Person(
         id = id,

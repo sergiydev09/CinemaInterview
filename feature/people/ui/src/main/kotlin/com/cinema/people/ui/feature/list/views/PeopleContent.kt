@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cinema.core.domain.model.TimeWindow
 import com.cinema.core.ui.compose.ErrorContent
+import com.cinema.core.ui.compose.FilterChipBar
 import com.cinema.core.ui.compose.LoadingContent
 import com.cinema.core.ui.compose.TimeWindowToggle
 import com.cinema.core.ui.lazylist.rememberAnimatedLazyListState
@@ -36,6 +37,7 @@ fun PeopleContent(
     onPersonClick: (Int) -> Unit,
     onFavoriteClick: (Person) -> Unit,
     onTimeWindowChanged: (TimeWindow) -> Unit,
+    onClearFilter: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -60,6 +62,14 @@ fun PeopleContent(
             )
         }
 
+        if (uiState.activeFilterLabel != null) {
+            FilterChipBar(
+                label = uiState.activeFilterLabel,
+                resultCount = uiState.displayedPeople.size,
+                onClear = onClearFilter
+            )
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             val listState = rememberLazyListState()
             rememberAnimatedLazyListState(listState)
@@ -76,6 +86,19 @@ fun PeopleContent(
                     )
                 }
 
+                uiState.activeFilterLabel != null && uiState.displayedPeople.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No people match this filter",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
                 else -> {
                     LazyColumn(
                         state = listState,
@@ -83,7 +106,7 @@ fun PeopleContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(
-                            items = uiState.people,
+                            items = uiState.displayedPeople,
                             key = { it.id }
                         ) { person ->
                             PersonItem(
@@ -110,6 +133,7 @@ private fun PeopleContentLoadingPreview() {
             onPersonClick = {},
             onFavoriteClick = {},
             onTimeWindowChanged = {},
+            onClearFilter = {},
             onRetry = {}
         )
     }
@@ -148,6 +172,7 @@ private fun PeopleContentSuccessPreview() {
             onPersonClick = {},
             onFavoriteClick = {},
             onTimeWindowChanged = {},
+            onClearFilter = {},
             onRetry = {}
         )
     }
@@ -162,6 +187,7 @@ private fun PeopleContentErrorPreview() {
             onPersonClick = {},
             onFavoriteClick = {},
             onTimeWindowChanged = {},
+            onClearFilter = {},
             onRetry = {}
         )
     }

@@ -3,12 +3,12 @@ package com.cinema.people.ui.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cinema.core.ai.domain.model.AIIntent
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import com.cinema.core.favorites.domain.usecase.TogglePersonFavoriteUseCase
-import com.cinema.people.domain.mapper.toFavoritePerson
 import com.cinema.people.domain.model.PersonDetail
+import com.cinema.people.domain.repository.PeopleRepository
 import com.cinema.people.domain.usecase.GetPersonDetailUseCase
+import com.cinema.people.ui.ai.PeopleAIIntentHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,12 +24,17 @@ data class PersonDetailUiState(
     val error: String? = null
 )
 
+sealed interface PersonDetailIntent : AIIntent {
+    data object ToggleFavorite : PersonDetailIntent
+    data object Retry : PersonDetailIntent
+}
+
 @HiltViewModel
 class PersonDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getPersonDetailUseCase: GetPersonDetailUseCase,
-    private val favoritesRepository: FavoritesRepository,
-    private val togglePersonFavoriteUseCase: TogglePersonFavoriteUseCase
+    private val peopleRepository: PeopleRepository,
+    private val peopleAIIntentHandler: PeopleAIIntentHandler
 ) : ViewModel() {
 
     private val personId: Int = savedStateHandle.get<Int>(ARG_PERSON_ID) ?: 0
@@ -40,17 +45,33 @@ class PersonDetailViewModel @Inject constructor(
     init {
         loadPersonDetail()
         observeFavoriteStatus()
+        observeAIIntents()
+    }
+
+    fun handleIntent(intent: PersonDetailIntent) {
+        when (intent) {
+            is PersonDetailIntent.ToggleFavorite -> toggleFavorite()
+            is PersonDetailIntent.Retry -> loadPersonDetail()
+        }
+    }
+
+    private fun observeAIIntents() {
+        viewModelScope.launch {
+            peopleAIIntentHandler.intents.collect { intent ->
+                (intent as? PersonDetailIntent)?.let(::handleIntent)
+            }
+        }
     }
 
     private fun observeFavoriteStatus() {
         viewModelScope.launch {
-            favoritesRepository.isPersonFavorite(personId).collect { isFavorite ->
+            peopleRepository.isPersonFavorite(personId).collect { isFavorite ->
                 _uiState.update { it.copy(isFavorite = isFavorite) }
             }
         }
     }
 
-    fun loadPersonDetail() {
+    private fun loadPersonDetail() {
         viewModelScope.launch {
             getPersonDetailUseCase(personId).collect { result ->
                 when (result) {
@@ -70,16 +91,12 @@ class PersonDetailViewModel @Inject constructor(
         }
     }
 
-    fun toggleFavorite() {
+    private fun toggleFavorite() {
         _uiState.value.person?.run {
             viewModelScope.launch {
-                togglePersonFavoriteUseCase(toFavoritePerson())
+                peopleRepository.toggleFavoritePerson(id, name, profileUrl)
             }
         }
-    }
-
-    fun retry() {
-        loadPersonDetail()
     }
 
     companion object {

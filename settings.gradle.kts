@@ -32,9 +32,9 @@ include(":app")
 include(":core:data")
 include(":core:domain")
 include(":core:ui")
-include(":core:features:favorites:data")
-include(":core:features:favorites:domain")
-
+include(":core:features:ai:data")
+include(":core:features:ai:domain")
+include(":core:features:ai:ui")
 // Feature modules - Login
 include(":feature:login:data")
 include(":feature:login:domain")

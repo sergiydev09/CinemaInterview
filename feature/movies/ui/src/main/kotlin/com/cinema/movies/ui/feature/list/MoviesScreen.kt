@@ -1,6 +1,7 @@
 package com.cinema.movies.ui.feature.list
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -13,11 +14,18 @@ fun MoviesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { movieId ->
+            onMovieClick(movieId)
+        }
+    }
+
     MoviesContent(
         uiState = uiState,
         onMovieClick = onMovieClick,
-        onFavoriteClick = viewModel::toggleFavorite,
-        onTimeWindowChanged = viewModel::onTimeWindowChanged,
-        onRetry = viewModel::retry
+        onFavoriteClick = { viewModel.handleIntent(MoviesIntent.ToggleFavorite(it)) },
+        onTimeWindowChanged = { viewModel.handleIntent(MoviesIntent.ChangeTimeWindow(it)) },
+        onClearFilter = { viewModel.handleIntent(MoviesIntent.ClearFilter) },
+        onRetry = { viewModel.handleIntent(MoviesIntent.Retry) }
     )
 }

@@ -35,10 +35,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.cinema.core.favorites.domain.model.FavoriteMovie
-import com.cinema.core.favorites.domain.model.FavoritePerson
 import com.cinema.core.ui.compose.CinemaAsyncImage
 import com.cinema.core.ui.theme.CinemaTheme
+import com.cinema.home.domain.model.FavoriteMovie
+import com.cinema.home.domain.model.FavoritePerson
 import com.cinema.home.ui.R
 import com.cinema.home.ui.feature.HomeUiState
 

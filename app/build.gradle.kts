@@ -4,7 +4,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("io.github.sergiydev09.mockkhttp") version "1.4.30"
+//    id("io.github.sergiydev09.mockkhttp") version "1.4.30"
 }
 
 android {
@@ -41,17 +41,14 @@ android {
     }
 }
 
-composeCompiler {
-    enableStrongSkippingMode = true
-}
-
 dependencies {
     // Core modules
     implementation(projects.core.data)
     implementation(projects.core.domain)
     implementation(projects.core.ui)
-    implementation(projects.core.features.favorites.data)
-    implementation(projects.core.features.favorites.domain)
+    implementation(projects.core.features.ai.data)
+    implementation(projects.core.features.ai.domain)
+    implementation(projects.core.features.ai.ui)
 
     // Feature modules
     implementation(projects.feature.login.ui)

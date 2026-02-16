@@ -26,7 +26,7 @@ fun PersonDetailScreen(
         error != null -> {
             ErrorContent(
                 message = error,
-                onRetry = viewModel::retry
+                onRetry = { viewModel.handleIntent(PersonDetailIntent.Retry) }
             )
         }
 
@@ -34,7 +34,7 @@ fun PersonDetailScreen(
             PersonDetailContent(
                 person = person,
                 isFavorite = uiState.isFavorite,
-                onFavoriteClick = viewModel::toggleFavorite,
+                onFavoriteClick = { viewModel.handleIntent(PersonDetailIntent.ToggleFavorite) },
                 onBackClick = onBackClick
             )
         }

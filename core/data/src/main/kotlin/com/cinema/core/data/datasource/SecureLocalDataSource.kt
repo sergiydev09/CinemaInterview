@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.crypto.tink.Aead
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.InternalSerializationApi
@@ -65,6 +66,23 @@ class SecureLocalDataSource @Inject constructor(
             preferences.clear()
         }
     }
+
+    fun <T> observe(key: String, type: KType): Flow<T?> {
+        val prefKey = stringPreferencesKey(key)
+        return dataStore.data.map { preferences ->
+            val encoded = preferences[prefKey] ?: return@map null
+            try {
+                val encrypted = Base64.decode(encoded, Base64.DEFAULT)
+                val decrypted = aead.decrypt(encrypted, null)
+                val jsonString = String(decrypted, Charsets.UTF_8)
+                val serializer = json.serializersModule.serializer(type)
+                @Suppress("UNCHECKED_CAST")
+                json.decodeFromString(serializer, jsonString) as T
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
 }
 
 @OptIn(InternalSerializationApi::class)
@@ -75,4 +93,9 @@ suspend inline fun <reified T> SecureLocalDataSource.save(key: String, value: T)
 @OptIn(InternalSerializationApi::class)
 suspend inline fun <reified T> SecureLocalDataSource.get(key: String): T? {
     return get(key, typeOf<T>())
+}
+
+@OptIn(InternalSerializationApi::class)
+inline fun <reified T> SecureLocalDataSource.observe(key: String): Flow<T?> {
+    return observe(key, typeOf<T>())
 }

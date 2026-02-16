@@ -3,15 +3,16 @@ package com.cinema.movies.ui.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.cinema.core.domain.util.Result
-import com.cinema.core.favorites.domain.repository.FavoritesRepository
-import com.cinema.core.favorites.domain.usecase.ToggleMovieFavoriteUseCase
 import com.cinema.movies.domain.model.MovieDetail
+import com.cinema.movies.domain.repository.MoviesRepository
 import com.cinema.movies.domain.usecase.GetMovieDetailUseCase
+import com.cinema.movies.ui.ai.MoviesAIIntentHandler
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -30,8 +31,8 @@ import org.junit.Test
 class MovieDetailViewModelTest {
 
     private lateinit var getMovieDetailUseCase: GetMovieDetailUseCase
-    private lateinit var favoritesRepository: FavoritesRepository
-    private lateinit var toggleMovieFavoriteUseCase: ToggleMovieFavoriteUseCase
+    private lateinit var moviesRepository: MoviesRepository
+    private lateinit var moviesAIIntentHandler: MoviesAIIntentHandler
     private lateinit var savedStateHandle: SavedStateHandle
     private val testDispatcher = StandardTestDispatcher()
 
@@ -39,10 +40,12 @@ class MovieDetailViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getMovieDetailUseCase = mockk()
-        favoritesRepository = mockk(relaxed = true)
-        toggleMovieFavoriteUseCase = mockk(relaxed = true)
+        moviesRepository = mockk(relaxed = true)
+        moviesAIIntentHandler = mockk(relaxed = true) {
+            every { intents } returns emptyFlow()
+        }
         savedStateHandle = SavedStateHandle(mapOf(MovieDetailViewModel.ARG_MOVIE_ID to 123))
-        every { favoritesRepository.isMovieFavorite(any()) } returns flowOf(false)
+        every { moviesRepository.isMovieFavorite(any()) } returns flowOf(false)
     }
 
     @After
@@ -118,13 +121,13 @@ class MovieDetailViewModelTest {
     }
 
     @Test
-    fun `retry reloads movie detail`() = runTest {
+    fun `Retry reloads movie detail`() = runTest {
         every { getMovieDetailUseCase(123) } returns flowOf(Result.Success(createMovieDetail()))
 
         val viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.retry()
+        viewModel.handleIntent(MovieDetailIntent.Retry)
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 2) { getMovieDetailUseCase(123) }
@@ -135,7 +138,7 @@ class MovieDetailViewModelTest {
         savedStateHandle = SavedStateHandle(mapOf(MovieDetailViewModel.ARG_MOVIE_ID to 456))
         every { getMovieDetailUseCase(456) } returns flowOf(Result.Success(createMovieDetail(456)))
 
-        val viewModel = createViewModel()
+        createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify { getMovieDetailUseCase(456) }
@@ -155,8 +158,8 @@ class MovieDetailViewModelTest {
     private fun createViewModel() = MovieDetailViewModel(
         savedStateHandle,
         getMovieDetailUseCase,
-        favoritesRepository,
-        toggleMovieFavoriteUseCase
+        moviesRepository,
+        moviesAIIntentHandler
     )
 
     private fun createMovieDetail(id: Int = 123) = MovieDetail(

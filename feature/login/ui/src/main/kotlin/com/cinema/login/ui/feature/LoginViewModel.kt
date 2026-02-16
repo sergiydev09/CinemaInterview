@@ -20,9 +20,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * UI State for the login screen.
- */
 data class LoginUiState(
     val username: String = "",
     val password: String = "",
@@ -36,17 +33,17 @@ data class LoginUiState(
         get() = username.isNotBlank() && password.isNotBlank() && !isLoading
 }
 
-/**
- * One-time events from the login screen.
- */
 sealed class LoginEvent {
     data object NavigateToHome : LoginEvent()
 }
 
-/**
- * ViewModel for the login screen.
- * Handles user input validation and login logic.
- */
+sealed interface LoginIntent {
+    data class UsernameChanged(val username: String) : LoginIntent
+    data class PasswordChanged(val password: String) : LoginIntent
+    data class RememberUsernameChanged(val remember: Boolean) : LoginIntent
+    data object LoginClicked : LoginIntent
+}
+
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
@@ -65,6 +62,15 @@ class LoginViewModel @Inject constructor(
         loadSavedUsername()
     }
 
+    fun handleIntent(intent: LoginIntent) {
+        when (intent) {
+            is LoginIntent.UsernameChanged -> onUsernameChanged(intent.username)
+            is LoginIntent.PasswordChanged -> onPasswordChanged(intent.password)
+            is LoginIntent.RememberUsernameChanged -> onRememberUsernameChanged(intent.remember)
+            is LoginIntent.LoginClicked -> onLoginClicked()
+        }
+    }
+
     private fun loadSavedUsername() {
         viewModelScope.launch {
             userPreferencesRepository.getSavedUsername()?.let { savedUsername ->
@@ -78,10 +84,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Called when the username text changes.
-     */
-    fun onUsernameChanged(username: String) {
+    private fun onUsernameChanged(username: String) {
         _uiState.update {
             it.copy(
                 username = username,
@@ -92,10 +95,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Called when the password text changes.
-     */
-    fun onPasswordChanged(password: String) {
+    private fun onPasswordChanged(password: String) {
         _uiState.update {
             it.copy(
                 password = password,
@@ -106,28 +106,20 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Called when the remember username checkbox changes.
-     */
-    fun onRememberUsernameChanged(remember: Boolean) {
+    private fun onRememberUsernameChanged(remember: Boolean) {
         _uiState.update { it.copy(rememberUsername = remember) }
     }
 
-    /**
-     * Called when the login button is clicked.
-     */
-    fun onLoginClicked() {
+    private fun onLoginClicked() {
         val state = _uiState.value
         if (state.isLoading) return
 
-        // Validate credentials first
         val validationErrors = validateCredentialsUseCase(state.username, state.password)
         if (validationErrors.isNotEmpty()) {
             handleValidationErrors(validationErrors)
             return
         }
 
-        // If validation passes, attempt login
         viewModelScope.launch {
             loginUseCase(state.username, state.password).collect { result ->
                 when (result) {
@@ -155,7 +147,6 @@ class LoginViewModel @Inject constructor(
     private suspend fun handleLoginSuccess(token: String) {
         val state = _uiState.value
 
-        // Save or clear username based on remember preference (ignore errors for local operations)
         if (state.rememberUsername) {
             userPreferencesRepository.saveUsername(state.username)
         } else {

@@ -1,11 +1,15 @@
 package com.cinema.people.data.repository
 
+import com.cinema.core.data.datasource.SecureLocalDataSource
 import com.cinema.people.data.datasource.PeopleRemoteDataSource
 import com.cinema.people.data.network.model.PersonDTO
 import com.cinema.people.data.network.model.PersonDetailDTO
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -14,12 +18,16 @@ import org.junit.Test
 class PeopleRepositoryImplTest {
 
     private lateinit var remoteDataSource: PeopleRemoteDataSource
+    private lateinit var secureLocalDataSource: SecureLocalDataSource
     private lateinit var repository: PeopleRepositoryImpl
 
     @Before
     fun setup() {
         remoteDataSource = mockk()
-        repository = PeopleRepositoryImpl(remoteDataSource)
+        secureLocalDataSource = mockk {
+            every { observe<Any>(any(), any()) } returns flowOf(null)
+        }
+        repository = PeopleRepositoryImpl(remoteDataSource, secureLocalDataSource)
     }
 
     @Test
@@ -27,7 +35,7 @@ class PeopleRepositoryImplTest {
         val personDtos = listOf(createPersonDto(1), createPersonDto(2))
         coEvery { remoteDataSource.getTrendingPeople("day") } returns personDtos
 
-        val result = repository.getTrendingPeople("day")
+        val result = repository.getTrendingPeople("day").first()
 
         assertEquals(2, result.size)
         coVerify { remoteDataSource.getTrendingPeople("day") }
@@ -38,7 +46,7 @@ class PeopleRepositoryImplTest {
         val personDto = createPersonDto(1, "John Doe")
         coEvery { remoteDataSource.getTrendingPeople("day") } returns listOf(personDto)
 
-        val result = repository.getTrendingPeople("day")
+        val result = repository.getTrendingPeople("day").first()
 
         val person = result.first()
         assertEquals(1, person.id)
@@ -61,7 +69,7 @@ class PeopleRepositoryImplTest {
     fun `getTrendingPeople throws exception from data source`() = runTest {
         coEvery { remoteDataSource.getTrendingPeople("day") } throws Exception("Network error")
 
-        repository.getTrendingPeople("day")
+        repository.getTrendingPeople("day").first()
     }
 
     @Test(expected = Exception::class)

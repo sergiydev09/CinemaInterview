@@ -8,3 +8,7 @@ sdk.dir=/path/to/your/Android/sdk
 # Get your token at: https://www.themoviedb.org/settings/api
 # Use the "API Read Access Token" (not the API Key)
 TMDB_API_TOKEN=your_tmdb_api_token_here
+
+# OpenRouter API Key (required for AI assistant)
+# Get your key at: https://openrouter.ai/keys
+OPENROUTER_API_KEY=your_openrouter_api_key_here

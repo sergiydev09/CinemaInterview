@@ -2,9 +2,9 @@ package com.cinema.home.ui.feature
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cinema.core.favorites.domain.model.FavoriteMovie
-import com.cinema.core.favorites.domain.model.FavoritePerson
-import com.cinema.core.favorites.domain.repository.FavoritesRepository
+import com.cinema.home.domain.model.FavoriteMovie
+import com.cinema.home.domain.model.FavoritePerson
+import com.cinema.home.domain.repository.FavoritesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,10 +28,10 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         favoritesRepository.favoriteMovies,
         favoritesRepository.favoritePeople
-    ) { moviesMap, peopleMap ->
+    ) { movies, people ->
         HomeUiState(
-            favoriteMovies = moviesMap.values.toList(),
-            favoritePeople = peopleMap.values.toList()
+            favoriteMovies = movies,
+            favoritePeople = people
         )
     }.stateIn(
         scope = viewModelScope,

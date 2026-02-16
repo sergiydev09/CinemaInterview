@@ -87,10 +87,10 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `onUsernameChanged updates state`() = runTest {
+    fun `UsernameChanged updates state`() = runTest {
         val viewModel = createViewModel()
 
-        viewModel.onUsernameChanged("newUser")
+        viewModel.handleIntent(LoginIntent.UsernameChanged("newUser"))
 
         viewModel.uiState.test {
             assertEquals("newUser", awaitItem().username)
@@ -99,10 +99,10 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `onPasswordChanged updates state`() = runTest {
+    fun `PasswordChanged updates state`() = runTest {
         val viewModel = createViewModel()
 
-        viewModel.onPasswordChanged("newPass")
+        viewModel.handleIntent(LoginIntent.PasswordChanged("newPass"))
 
         viewModel.uiState.test {
             assertEquals("newPass", awaitItem().password)
@@ -111,10 +111,10 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `onRememberUsernameChanged updates state`() = runTest {
+    fun `RememberUsernameChanged updates state`() = runTest {
         val viewModel = createViewModel()
 
-        viewModel.onRememberUsernameChanged(true)
+        viewModel.handleIntent(LoginIntent.RememberUsernameChanged(true))
 
         viewModel.uiState.test {
             assertTrue(awaitItem().rememberUsername)
@@ -123,16 +123,16 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `onLoginClicked with validation errors updates state`() = runTest {
+    fun `LoginClicked with validation errors updates state`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns listOf(
             ValidationErrorType.USERNAME_TOO_SHORT,
             ValidationErrorType.PASSWORD_TOO_SHORT
         )
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("ab")
-        viewModel.onPasswordChanged("short")
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("ab"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("short"))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -144,28 +144,28 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `onLoginClicked with valid credentials calls loginUseCase`() = runTest {
+    fun `LoginClicked with valid credentials calls loginUseCase`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns emptyList()
         every { loginUseCase("user", "Password1!") } returns flowOf(Result.Loading)
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify { loginUseCase("user", "Password1!") }
     }
 
     @Test
-    fun `onLoginClicked shows loading state`() = runTest {
+    fun `LoginClicked shows loading state`() = runTest {
         every { validateCredentialsUseCase(any(), any()) } returns emptyList()
         every { loginUseCase(any(), any()) } returns flowOf(Result.Loading)
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -182,10 +182,10 @@ class LoginViewModelTest {
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
-        viewModel.onRememberUsernameChanged(true)
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
+        viewModel.handleIntent(LoginIntent.RememberUsernameChanged(true))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.saveUsername("user") }
@@ -199,10 +199,10 @@ class LoginViewModelTest {
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
-        viewModel.onRememberUsernameChanged(false)
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
+        viewModel.handleIntent(LoginIntent.RememberUsernameChanged(false))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.clearUsername() }
@@ -216,9 +216,9 @@ class LoginViewModelTest {
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         verify { sessionManager.startSession("token123") }
@@ -232,11 +232,11 @@ class LoginViewModelTest {
         every { sessionManager.startSession(any()) } just runs
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
 
         viewModel.events.test {
-            viewModel.onLoginClicked()
+            viewModel.handleIntent(LoginIntent.LoginClicked)
             testDispatcher.scheduler.advanceUntilIdle()
 
             assertEquals(LoginEvent.NavigateToHome, awaitItem())
@@ -250,9 +250,9 @@ class LoginViewModelTest {
         every { loginUseCase(any(), any()) } returns flowOf(Result.Error("Invalid"))
 
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("Password1!")
-        viewModel.onLoginClicked()
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("Password1!"))
+        viewModel.handleIntent(LoginIntent.LoginClicked)
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -276,8 +276,8 @@ class LoginViewModelTest {
     @Test
     fun `login button is enabled when fields are filled`() = runTest {
         val viewModel = createViewModel()
-        viewModel.onUsernameChanged("user")
-        viewModel.onPasswordChanged("pass")
+        viewModel.handleIntent(LoginIntent.UsernameChanged("user"))
+        viewModel.handleIntent(LoginIntent.PasswordChanged("pass"))
 
         viewModel.uiState.test {
             assertTrue(awaitItem().isLoginButtonEnabled)
